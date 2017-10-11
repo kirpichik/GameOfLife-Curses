@@ -36,7 +36,7 @@ public:
      *
      * @return Объект для редактирования
      * */
-    ModifiableGameField edit() const;
+    ModifiableGameField edit();
     
 private:
     std::vector<std::vector<bool>> field;
@@ -75,15 +75,26 @@ public:
     class ModifiableSubGameField;
     
     /**
+     * @return Возвращает текущее состояние поля.
+     * */
+    GameField& getOriginalField() const;
+    
+    /**
      * Применяет изменения из отредактированного объекта.
      */
     void apply() const;
+    
+    /**
+     * Получение подобъекта оператором квадратных скобок.
+     * */
+    ModifiableSubGameField operator[](size_t pos);
     
 private:
     GameField& original;
     std::vector<std::vector<bool>> field;
     
-    ModifiableGameField(GameField& gameField) : original(gameField), field(std::vector<std::vector<bool>>(gameField.field)) {}
+    ModifiableGameField(GameField& gameField) :
+        original(gameField), field(std::vector<std::vector<bool>>(gameField.field)) {}
     
     friend GameField;
 };
@@ -99,7 +110,12 @@ public:
     /**
      * Получение прокси ячейки на данной позиции.
      * */
-    ModifiableSubGameFieldProxy operator[](size_t pos) const;
+    ModifiableSubGameFieldProxy operator[](size_t pos);
+    
+    /**
+     * Получение значения ячейки на данной позиции.
+     * */
+    bool operator[](size_t pos) const;
     
     /**
      * Запрет присваивания лишних объектов.
@@ -128,7 +144,8 @@ private:
     const size_t pos;
     ModifiableSubGameField& forEdit;
     
-    ModifiableSubGameFieldProxy(ModifiableSubGameField& edit, size_t position) : pos(position), forEdit(edit) {}
+    ModifiableSubGameFieldProxy(ModifiableSubGameField& edit, size_t position) :
+        pos(position), forEdit(edit) {}
     
     friend ModifiableSubGameField;
 };
