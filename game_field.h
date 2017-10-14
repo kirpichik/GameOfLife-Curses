@@ -11,6 +11,8 @@
 
 #include <vector>
 
+class MutableGameField;
+
 /**
  * Неизменяемое игровое поле.
  * */
@@ -18,7 +20,6 @@ class GameField {
 public:
     
     class SubGameField;
-    class ModifiableGameField;
     
     /**
      * @param width Ширина поля
@@ -28,18 +29,25 @@ public:
     
     /**
      * Получение подобъекта оператором квадратных скобок.
+     * Учитывается цикличность поля по модулю width.
      * */
-    SubGameField operator[](size_t pos) const;
+    SubGameField operator[](int pos) const;
 
     /**
      * Создает объект для редактирования поля.
      *
      * @return Объект для редактирования
      * */
-    ModifiableGameField edit();
+    MutableGameField edit();
+    
+    ~GameField();
     
 private:
-    std::vector<std::vector<bool>> field;
+    const size_t width;
+    const size_t height;
+    std::vector<std::vector<bool>>* field;
+    
+    friend MutableGameField;
 };
 
 /**
@@ -48,36 +56,69 @@ private:
 class GameField::SubGameField {
 public:
     
+    class Cell;
+    
     /**
      * Получение значения ячейки на данной позиции.
+     * Учитывается цикличность поля по модулю height.
      * */
-    bool operator[](size_t pos) const;
+    Cell operator[](int pos) const;
     
     /**
      * Запрет присваивания.
      * */
     SubGameField& operator=(SubGameField const&) = delete;
     
-private:
-    std::vector<bool> subfield;
+protected:
+    const size_t posX;
+    const size_t height;
+    std::vector<std::vector<bool>>& field;
     
-    SubGameField(std::vector<bool> field) : subfield(field) {}
+    SubGameField(size_t posX, size_t height, std::vector<std::vector<bool>>& field) :
+        posX(posX), field(field), height(height) {}
     
     friend GameField;
 };
 
 /**
- * Редактор игрового поля.
+ * Клетка на поле.
  * */
-class GameField::ModifiableGameField {
+class GameField::SubGameField::Cell {
 public:
     
-    class ModifiableSubGameField;
+    /**
+     * @return true, если клетка жива.
+     * */
+    virtual bool isLife() const;
     
     /**
-     * @return Возвращает текущее состояние поля.
+     * @return Позиция X
      * */
-    GameField& getOriginalField() const;
+    virtual size_t getX() const;
+    
+    /**
+     * @return Позиция Y
+     * */
+    virtual size_t getY() const;
+
+protected:
+    const size_t posX;
+    const size_t posY;
+    std::vector<std::vector<bool>>& field;
+    
+    Cell(size_t posX, size_t posY, std::vector<std::vector<bool>>& field) :
+        posX(posX), posY(posY), field(field) {}
+    
+    friend SubGameField;
+};
+
+/**
+ * Редактор игрового поля.
+ * */
+class MutableGameField {
+public:
+    
+    class MutableSubGameField;
     
     /**
      * Применяет изменения из отредактированного объекта.
@@ -86,15 +127,16 @@ public:
     
     /**
      * Получение подобъекта оператором квадратных скобок.
+     * Учитывается цикличность поля по модулю width.
      * */
-    ModifiableSubGameField operator[](size_t pos);
+    MutableSubGameField operator[](int pos);
     
 private:
     GameField& original;
     std::vector<std::vector<bool>> field;
     
-    ModifiableGameField(GameField& gameField) :
-        original(gameField), field(std::vector<std::vector<bool>>(gameField.field)) {}
+    MutableGameField(GameField& gameField) :
+        original(gameField), field(std::vector<std::vector<bool>>((*gameField.field))) {}
     
     friend GameField;
 };
@@ -102,52 +144,47 @@ private:
 /**
  * Получение значения ячейки и его редактирование с использованием оператора квадратных скобок.
  * */
-class GameField::ModifiableGameField::ModifiableSubGameField {
+class MutableGameField::MutableSubGameField : public GameField::SubGameField {
 public:
     
-    class ModifiableSubGameFieldProxy;
-    
-    /**
-     * Получение прокси ячейки на данной позиции.
-     * */
-    ModifiableSubGameFieldProxy operator[](size_t pos);
+    class MutableCell;
     
     /**
      * Получение значения ячейки на данной позиции.
      * */
-    bool operator[](size_t pos) const;
-    
-    /**
-     * Запрет присваивания лишних объектов.
-     * */
-    ModifiableSubGameField& operator=(ModifiableSubGameField const&) = delete;
+    MutableCell operator[](int pos) const;
     
 private:
-    std::vector<bool>& subfield;
     
-    ModifiableSubGameField(std::vector<bool>& field) : subfield(field) {}
+    MutableSubGameField(size_t posX, size_t height, std::vector<std::vector<bool>>& field) :
+        SubGameField(posX, height, field) {}
     
-    friend ModifiableGameField;
+    friend MutableGameField;
 };
 
 /**
- * Прокси для получения/изменения ячейки
+ * Редактируемая клетка поля.
  * */
-class GameField::ModifiableGameField::ModifiableSubGameField::ModifiableSubGameFieldProxy {
+class MutableGameField::MutableSubGameField::MutableCell :
+    public GameField::SubGameField::Cell {
+    
 public:
+    
+    /**
+     * Зарождает жизнь.
+     * */
+    void bornLife();
 
-    ModifiableSubGameFieldProxy& operator=(bool isCell);
-    
-    operator bool() const;
-    
+    /**
+     * Уничтожает жизнь.
+     * */
+    void kill();
 private:
-    const size_t pos;
-    ModifiableSubGameField& forEdit;
-    
-    ModifiableSubGameFieldProxy(ModifiableSubGameField& edit, size_t position) :
-        pos(position), forEdit(edit) {}
-    
-    friend ModifiableSubGameField;
+        
+    MutableCell(size_t posX, size_t posY, std::vector<std::vector<bool>>& field) :
+        Cell(posX, posY, field) {}
+        
+    friend MutableSubGameField;
 };
 
 #endif /* game_field_h */

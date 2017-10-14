@@ -36,6 +36,7 @@ public:
      * @param listener Обработчик обновления поля.
      * */
     GameManager(size_t width, size_t height, FieldUpdateListener& listener) :
+        width(width), height(height),
         gameField(GameField(width, height)), updateListener(listener) {}
     
     /**
@@ -60,11 +61,22 @@ public:
      * @param posX Позиция по X
      * @param posY Позиция по Y
      * */
-    void setCellAt(size_t posX, size_t posY);
+    void setCellAt(int posX, int posY);
 
 private:
+    const size_t width, height;
     GameField gameField;
     FieldUpdateListener& updateListener;
+    
+    /**
+     * Подсчитывает количество живых клеток вокруг данной клетки.
+     *
+     * @param posX Позиция X
+     * @param posY Позиция Y
+     *
+     * @return Количество живых клеток вокруг
+     * */
+    size_t countLifeAround(int posX, int posY) const;
 };
 
 #endif /* game_handler_h */

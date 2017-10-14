@@ -8,54 +8,75 @@
 
 #include "game_field.h"
 
-GameField::GameField(size_t width, size_t height) {
-    field = std::vector<std::vector<bool>>(width);
+/**
+ * Делает позицию цикличной.
+ * Cоседями верхних клеток являются нижние,
+ * соседями правых клеток являются левые.
+ *
+ * @param pos Позиция
+ * @param module Модуль цикличности(размер поля)
+ *
+ * @return Цикличная позиция
+ * */
+static int roundPos(int pos, size_t module) {
+    if (pos < 0)
+        return ((int) module) - (-pos) % module;
+    return pos % module;
+}
+
+GameField::GameField(size_t width, size_t height) : width(width), height(height) {
+    field = new std::vector<std::vector<bool>>(width);
     for (size_t i = 0; i < width; i++)
-        field[i] = std::vector<bool>(height);
+        (*field)[i] = std::vector<bool>(height);
 }
 
-GameField::SubGameField GameField::operator[](size_t pos) const {
-    return SubGameField(field[pos]);
+// TODO - Может заменить как-нибудь без выделения на куче?
+GameField::~GameField() {
+    delete field;
 }
 
-GameField::ModifiableGameField GameField::edit() {
-    return ModifiableGameField(*this);
+GameField::SubGameField GameField::operator[](int pos) const {
+    return SubGameField(roundPos(pos, width), height, (*field));
 }
 
-bool GameField::SubGameField::operator[](size_t pos) const {
-    return subfield[pos];
+MutableGameField GameField::edit() {
+    return MutableGameField(*this);
 }
 
-GameField& GameField::ModifiableGameField::getOriginalField() const {
-    return original;
+GameField::SubGameField::Cell GameField::SubGameField::operator[](int pos) const {
+    return Cell(posX, roundPos(pos, height), field);
 }
 
-void GameField::ModifiableGameField::apply() const {
-    original.field = field;
+bool GameField::SubGameField::Cell::isLife() const {
+    return field[posX][posY];
 }
 
-GameField::ModifiableGameField::ModifiableSubGameField
-    GameField::ModifiableGameField::operator[](size_t pos) {
-    return ModifiableSubGameField(field[pos]);
+size_t GameField::SubGameField::Cell::getX() const {
+    return posX;
 }
 
-GameField::ModifiableGameField::ModifiableSubGameField::ModifiableSubGameFieldProxy
-    GameField::ModifiableGameField::ModifiableSubGameField::operator[](size_t pos) {
-    return ModifiableSubGameFieldProxy(*this, pos);
+size_t GameField::SubGameField::Cell::getY() const {
+    return posY;
 }
 
-bool GameField::ModifiableGameField::ModifiableSubGameField::operator[](size_t pos) const {
-    return subfield[pos];
+void MutableGameField::apply() const {
+    (*original.field) = field;
 }
 
-GameField::ModifiableGameField::ModifiableSubGameField::ModifiableSubGameFieldProxy&
-    GameField::ModifiableGameField::ModifiableSubGameField::ModifiableSubGameFieldProxy::
-        operator=(bool isCell) {
-    forEdit.subfield[pos] = isCell;
-    return const_cast<ModifiableSubGameFieldProxy&>(*this);
+MutableGameField::MutableSubGameField
+    MutableGameField::operator[](int pos) {
+    return MutableSubGameField(roundPos(pos, original.width), original.height, field);
 }
 
-GameField::ModifiableGameField::ModifiableSubGameField::ModifiableSubGameFieldProxy::
-    operator bool() const {
-    return forEdit.subfield[pos];
+MutableGameField::MutableSubGameField::MutableCell
+    MutableGameField::MutableSubGameField::operator[](int pos) const {
+    return MutableCell(posX, roundPos(pos, height), field);
+}
+
+void MutableGameField::MutableSubGameField::MutableCell::bornLife() {
+    field[posX][posY] = true;
+}
+
+void MutableGameField::MutableSubGameField::MutableCell::kill() {
+    field[posX][posY] = false;
 }
