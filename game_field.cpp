@@ -25,25 +25,31 @@ static int roundPos(int pos, size_t module) {
 }
 
 GameField::GameField(size_t width, size_t height) : width(width), height(height) {
-    field = new std::vector<std::vector<bool>>(width);
+    field = std::vector<std::vector<bool>>(width);
     for (size_t i = 0; i < width; i++)
-        (*field)[i] = std::vector<bool>(height);
+        field[i] = std::vector<bool>(height);
 }
 
-// TODO - Может заменить как-нибудь без выделения на куче?
-GameField::~GameField() {
-    delete field;
+GameField::SubGameField GameField::operator[](int pos) {
+    return SubGameField(roundPos(pos, width), (*this));
 }
 
-GameField::SubGameField GameField::operator[](int pos) const {
-    return SubGameField(roundPos(pos, width), height, (*field));
+const GameField::SubGameField GameField::operator[](int pos) const {
+    return SubGameField(roundPos(pos, width), const_cast<GameField&>(*this));
 }
 
-MutableGameField GameField::edit() {
-    return MutableGameField(*this);
+const GameField& GameField::operator=(const GameField &copy) {
+    width = copy.width;
+    height = copy.height;
+    field = copy.field;
+    return (*this);
 }
 
-GameField::SubGameField::Cell GameField::SubGameField::operator[](int pos) const {
+GameField::SubGameField::Cell GameField::SubGameField::operator[](int pos) {
+    return Cell(posX, roundPos(pos, height), field);
+}
+
+const GameField::SubGameField::Cell GameField::SubGameField::operator[](int pos) const {
     return Cell(posX, roundPos(pos, height), field);
 }
 
@@ -59,24 +65,10 @@ size_t GameField::SubGameField::Cell::getY() const {
     return posY;
 }
 
-void MutableGameField::apply() const {
-    (*original.field) = field;
-}
-
-MutableGameField::MutableSubGameField
-    MutableGameField::operator[](int pos) {
-    return MutableSubGameField(roundPos(pos, original.width), original.height, field);
-}
-
-MutableGameField::MutableSubGameField::MutableCell
-    MutableGameField::MutableSubGameField::operator[](int pos) const {
-    return MutableCell(posX, roundPos(pos, height), field);
-}
-
-void MutableGameField::MutableSubGameField::MutableCell::bornLife() {
+void GameField::SubGameField::Cell::bornLife() {
     field[posX][posY] = true;
 }
 
-void MutableGameField::MutableSubGameField::MutableCell::kill() {
+void GameField::SubGameField::Cell::kill() {
     field[posX][posY] = false;
 }
