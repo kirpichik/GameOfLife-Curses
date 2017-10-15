@@ -102,6 +102,11 @@ public:
      * @return true, если команда найдена и исполнена.
      * */
     bool executeCommand(std::string name, std::vector<std::string> args, std::ostream& output);
+    
+    /**
+     * @return Игровое поле в данный момент.
+     * */
+    const GameField getCurrentField() const;
 
 private:
     const size_t width;

@@ -108,16 +108,16 @@ size_t GameManager::countLifeAround(int posX, int posY) const {
     
     size_t lifes = 0; // Количество живых клеток вокруг
     
-    lifes += gameField[posX - 1][posY].isLife() ? 1 : 0; // 2-1
-    lifes += gameField[posX + 1][posY].isLife() ? 1 : 0; // 2-3
+    lifes += previousStep[posX - 1][posY].isLife() ? 1 : 0; // 2-1
+    lifes += previousStep[posX + 1][posY].isLife() ? 1 : 0; // 2-3
     
     // 1-1 -> 1-3
     for (int i = posX - 1; i <= posX + 1; i++)
-        lifes += gameField[i][posY - 1].isLife() ? 1 : 0;
+        lifes += previousStep[i][posY - 1].isLife() ? 1 : 0;
     
     // 3-1 -> 3-3
     for (int i = posX - 1; i <= posX + 1; i++)
-        lifes += gameField[i][posY + 1].isLife() ? 1 : 0;
+        lifes += previousStep[i][posY + 1].isLife() ? 1 : 0;
     
     return lifes;
 }
@@ -185,4 +185,8 @@ bool GameManager::executeCommand(std::string name, std::vector<std::string> args
         return false;
     executor->second(args, (*this), output);
     return true;
+}
+
+const GameField GameManager::getCurrentField() const {
+    return gameField;
 }

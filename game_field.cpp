@@ -38,11 +38,33 @@ const GameField::SubGameField GameField::operator[](int pos) const {
     return SubGameField(roundPos(pos, width), const_cast<GameField&>(*this));
 }
 
+size_t GameField::getWidth() const {
+    return width;
+}
+
+size_t GameField::getHeight() const {
+    return height;
+}
+
 const GameField& GameField::operator=(const GameField &copy) {
     width = copy.width;
     height = copy.height;
     field = copy.field;
     return (*this);
+}
+
+bool GameField::operator==(const GameField& equal) const {
+    return field == equal.field;
+}
+
+std::ostream& operator<<(std::ostream& stream, const GameField& field) {
+    for (int i = 0; i < field.width; i++) {
+        for (int j = 0; j < field.height; j++)
+            stream << (field.field[i][j] ? '#' : '.');
+        if (i != field.width - 1)
+            stream << std::endl;
+    }
+    return stream;
 }
 
 GameField::SubGameField::Cell GameField::SubGameField::operator[](int pos) {

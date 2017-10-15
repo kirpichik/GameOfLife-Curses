@@ -10,6 +10,7 @@
 #define game_field_h
 
 #include <vector>
+#include <ostream>
 
 /**
  * Неизменяемое игровое поле.
@@ -42,7 +43,19 @@ public:
      * */
     const SubGameField operator[](int pos) const;
     
+    /**
+     * @return Ширина поля.
+     * */
+    size_t getWidth() const;
+    
+    /**
+     * @return Высота поля.
+     * */
+    size_t getHeight() const;
+    
     const GameField& operator=(const GameField& copy);
+    
+    bool operator==(const GameField& equal) const;
     
 private:
     size_t width;
@@ -50,7 +63,13 @@ private:
     std::vector<std::vector<bool>> field;
     
     friend SubGameField;
+    friend std::ostream& operator<<(std::ostream& stream, const GameField& field);
 };
+
+/**
+ * TODO - Почему его нельзя перегрузить как член класса??????
+ * */
+std::ostream& operator<<(std::ostream& stream, const GameField& field);
 
 /**
  * Получение значения ячейки оператором двойных квадратных скобок.
