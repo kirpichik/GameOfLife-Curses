@@ -66,9 +66,6 @@ private:
     friend std::ostream& operator<<(std::ostream& stream, const GameField& field);
 };
 
-/**
- * TODO - Почему его нельзя перегрузить как член класса??????
- * */
 std::ostream& operator<<(std::ostream& stream, const GameField& field);
 
 /**

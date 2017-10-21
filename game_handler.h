@@ -15,6 +15,14 @@
 
 #include "game_field.h"
 
+const std::vector<std::string> PROMPTS = {
+    "Q Exit",
+    "N Next turn",
+    "B Step Back",
+    "R Reset",
+    "C Command mode"
+};
+
 /**
  * Обработчик события обновления поля.
  * */
@@ -48,14 +56,6 @@ public:
     void nextStep();
     
     /**
-     * Выполняет несколько ходов.
-     * После выполнения каждого хода вызывается обработчик события обновления.
-     *
-     * @param count Количество ходов.
-     * */
-    void manySteps(size_t count);
-    
-    /**
      * Если клетка существовала на данной позиции, она умирает.
      * Если клетки не было, она полявляется.
      * После изменения вызывается обработчик события обновления.
@@ -68,10 +68,13 @@ public:
     bool setCellAt(int posX, int posY);
     
     /**
-     * Очищает поле и сбрасыает счетчик команд.
+     * Очищает поле, сбрасывает счетчик команд и создает поле с новыми размерами.
      * После изменения вызывается обработчик события обновления.
+     *
+     * @param width Новая ширина
+     * @param height Новая высота
      * */
-    void reset();
+    void reset(size_t width, size_t height);
     
     /**
      * Отменяет последний шаг.
@@ -92,7 +95,7 @@ public:
      * @param name Команда
      * @param cmd Функция обработчик команды
      * */
-    void registerCommand(std::string name, void(*cmd)(const std::vector<std::string>, GameManager&, std::ostream&));
+    void registerCommand(std::string name, void(*cmd)(const std::vector<std::string>&, GameManager&, std::ostream&));
     
     /**
      * Исполняет команду.
@@ -101,19 +104,51 @@ public:
      *
      * @return true, если команда найдена и исполнена.
      * */
-    bool executeCommand(std::string name, std::vector<std::string> args, std::ostream& output);
+    bool executeCommand(std::string name, std::vector<std::string>& args, std::ostream& output);
+    
+    /**
+     * Проверяет, можно ли создать поле с данными размерами на данном терминале.
+     *
+     * @param fieldWidth Ширина нового поля
+     * @param fieldHeight Высота нового поля
+     *
+     * @return true, если поле можно создать.
+     * */
+    bool canCreateFieldWithSizes(size_t fieldWidth, size_t fieldHeight) const;
+    
+    /**
+     * Обработка нажатий мышью
+     *
+     * @param x Координата X
+     * @param y Координата Y
+     * */
+    void onMousePressed(int x, int y);
+    
+    /**
+     * Обработка нажатий клавиатуры
+     *
+     * @param key Код клавиши
+     *
+     * @return true, если нужно завершить работу программы.
+     * */
+    bool onKeyPressed(int key);
     
     /**
      * @return Игровое поле в данный момент.
      * */
     const GameField getCurrentField() const;
+    
+    /**
+     * @return Количество шагов с начала игры.
+     * */
+    size_t getStepsCount() const;
 
 private:
-    const size_t width;
-    const size_t height;
+    size_t width;
+    size_t height;
     
-    size_t stepsCounter;
-    std::map<std::string, void(*)(const std::vector<std::string>, GameManager&, std::ostream&)> commands;
+    size_t stepsCounter = 0;
+    std::map<std::string, void(*)(const std::vector<std::string>&, GameManager&, std::ostream&)> commands;
     GameField gameField;
     GameField previousStep;
     bool hasUndo = false; // Есть ли возможность отменить на данном шаге.
@@ -128,6 +163,20 @@ private:
      * @return Количество живых клеток вокруг
      * */
     size_t countLifeAround(int posX, int posY) const;
+    
+    /**
+     * Активирует командный режим и ждет ввода одной команды.
+     * После исполнения команды переходит в обычный режим.
+     * */
+    void executionInCommandMode();
+    
+    /**
+     * Вычисляет максимальную ширину подсказки на экране
+     * в количестве занимаемых ею символов.
+     *
+     * @return Количество символов, которое занимает самая длинная подсказка.
+     * */
+    size_t getMaxPromptWidth() const;
 };
 
 #endif /* game_handler_h */

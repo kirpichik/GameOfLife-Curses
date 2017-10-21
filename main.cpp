@@ -2,14 +2,16 @@
 //  main.cpp
 //  GameOfLive
 //
-//  Created by Кирилл on 10.10.17.
+//  Created by Кирилл on 15.10.17.
 //  Copyright © 2017 Кирилл. All rights reserved.
 //
 
-#include <iostream>
+#include "view_handler.h"
+
+const size_t FIELD_WIDTH = 10;
+const size_t FIELD_HEIGHT = 10;
 
 int main(int argc, const char * argv[]) {
-    // insert code here...
-    std::cout << "Hello, World!\n";
-    return 0;
+    ViewHandler game(FIELD_WIDTH, FIELD_HEIGHT);
+    return game.runGame();
 }
