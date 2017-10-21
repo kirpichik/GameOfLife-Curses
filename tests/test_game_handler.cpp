@@ -127,7 +127,7 @@ void testParseField(std::string str) {
  * Размещает в игре клетки из поля.
  * */
 void importGameField(GameManager& game, const GameField& field) {
-    game.reset();
+    game.reset(game.getCurrentField().getWidth(), game.getCurrentField().getHeight());
     for (int i = 0; i < field.getWidth(); i++)
         for (int j = 0; j < field.getHeight(); j++)
             if (field[i][j].isLife())
@@ -212,7 +212,7 @@ TEST(GameHandler, Reset) {
     const GameField sample = game.getCurrentField();
     catcher.setSampleEquality(&sample);
     
-    game.reset();
+    game.reset(game.getCurrentField().getWidth(), game.getCurrentField().getHeight());
     
     catcher.cancelCathing();
     for (int i = 0; i < 10; i++)
@@ -220,7 +220,7 @@ TEST(GameHandler, Reset) {
     
     catcher.setSampleEquality(&sample);
     
-    game.reset();
+    game.reset(game.getCurrentField().getWidth(), game.getCurrentField().getHeight());
 }
 
 TEST(GameHandler, StepBack) {
