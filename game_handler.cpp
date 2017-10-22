@@ -61,6 +61,8 @@ bool GameManager::canCreateFieldWithSizes(size_t fieldWidth, size_t fieldHeight)
 
 /**
  * Очищает поле и сбрасывает счетчик команд.
+ * Если передать в аргументы ширину и высоту, создаст поле с данными шириной и высотой.
+ * Аргументы: [ширина] [высота]
  * */
 static void commandReset(const std::vector<std::string>& args, GameManager& game, std::ostream& out) {
     if (args.size() != 2) {
@@ -87,7 +89,7 @@ static void commandReset(const std::vector<std::string>& args, GameManager& game
 }
 
 /**
- * Устанавливает или удаляет организм в клетку.
+ * Устанавливает или удаляет организм в клетке.
  * Аргументы: <позиция X> <позиция Y>
  * */
 static void commandSet(const std::vector<std::string>& args, GameManager& game, std::ostream& out) {
@@ -147,7 +149,7 @@ static void commandBack(const std::vector<std::string>& args, GameManager& game,
 
 /**
  * Сохраняет состояние поля в файл.
- * Аргументы: <имя файла>
+ * Аргументы: [имя файла]
  * */
 static void commandSave(const std::vector<std::string>& args, GameManager& game, std::ostream& out) {
     std::string filename = DEFAULT_SAVE_FILENAME;
@@ -168,7 +170,7 @@ static void commandSave(const std::vector<std::string>& args, GameManager& game,
 
 /**
  * Загружает состояние поля из файла.
- * Аргументы: <имя файла>
+ * Аргументы: [имя файла]
  * */
 static void commandLoad(const std::vector<std::string>& args, GameManager& game, std::ostream& out) {
     std::string filename = DEFAULT_SAVE_FILENAME;
