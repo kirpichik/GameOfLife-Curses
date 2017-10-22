@@ -98,11 +98,12 @@ static void commandSet(const std::vector<std::string>& args, GameManager& game, 
     int posX = atoi(args[0].c_str());
     int posY = atoi(args[1].c_str());
     
-    out << "Cell " << (game.setCellAt(posX, posY) ? "killed." : "spawned.") << std::endl;
+    out << "Cell " << (game.setCellAt(posX, posY) ? "spawned." : "killed.") << std::endl;
 }
 
 /**
  * Выполняет переданное кол-во шагов. Если аргумент отсутствует, выполняет 1 шаг.
+ * Если агрумент '-', выполняет бесконечное количество шагов, пока не будет нажата клавиша 'I'.
  * Аргументы: [кол-во шагов]
  * */
 static void commandStep(const std::vector<std::string>& args, GameManager& game, std::ostream& out) {
