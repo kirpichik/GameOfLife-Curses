@@ -22,9 +22,10 @@ const int KEY_N = 110;
 const int KEY_B = 98;
 const int KEY_R = 114;
 const int KEY_C = 99;
+const int KEY_I = 105;
 
-// Задержка при обновлении следующего шага(для множественных шагов)
-const size_t STEP_UPDATE_DELAY = 100;
+// Задержка в десятых долях секунды при обновлении следующего шага(для множественных шагов)
+const size_t STEP_UPDATE_DELAY = 1;
 
 // Максимальная длина команды в командном режиме
 const size_t MAX_COMMAND_LEN = 50;
@@ -106,15 +107,30 @@ static void commandSet(const std::vector<std::string>& args, GameManager& game, 
  * */
 static void commandStep(const std::vector<std::string>& args, GameManager& game, std::ostream& out) {
     size_t steps = 1;
-    if (args.size() > 0)
-        steps = atoi(args[0].c_str());
-    
-    for (size_t i = 0; i < steps; i++) {
-        game.nextStep();
-        std::this_thread::sleep_for(std::chrono::milliseconds(STEP_UPDATE_DELAY));
+    bool isInfinity = false;
+    if (args.size() > 0) {
+        if (args[0] == "-")
+            isInfinity = true;
+        else
+            steps = atoi(args[0].c_str());
     }
     
-    out << "Done " << steps << " step(s)." << std::endl;
+    halfdelay(STEP_UPDATE_DELAY);
+    int input;
+    game.setLastCommandOutput("Making steps... Press I for interrupt.");
+    
+    size_t counter = 0;
+    for (; counter < steps || isInfinity; counter++) {
+        game.nextStep();
+        input = getch();
+        if (input == KEY_I)
+            break;
+    }
+    
+    nocbreak();
+    cbreak();
+    
+    out << "Done " << (counter + 1) << " step(s)." << std::endl;
 }
 
 /**
@@ -337,6 +353,8 @@ void GameManager::executionInCommandMode() {
     std::vector<std::string> args(split.begin() + 1, split.begin() + split.size());
     std::ostringstream out;
     
+    lastCommandOutput = "";
+    
     if (!executeCommand(command, args, out))
         out << "Command \"" << command << "\" not found.";
     
@@ -362,9 +380,11 @@ void GameManager::onKeyPressed(int key) {
             nextStep();
             break;
         case KEY_B:
-            stepBack();
+            lastCommandOutput = stepBack() ? "Back step completed."
+                : "It's impossible to step back.";
             break;
         case KEY_R:
+            lastCommandOutput = "Field reseted.";
             reset(width, height);
             break;
         case KEY_C:
@@ -385,4 +405,8 @@ size_t GameManager::getStepsCount() const {
 
 std::string GameManager::getLastCommandOutput() const {
     return lastCommandOutput;
+}
+
+void GameManager::setLastCommandOutput(const std::string output) {
+    lastCommandOutput = output;
 }

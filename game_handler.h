@@ -161,6 +161,13 @@ public:
      * @return Последний вывод из командного режима.
      * */
     std::string getLastCommandOutput() const;
+    
+    /**
+     * Устанавливает последний вывод командного режима(для мнгновенного обновления).
+     *
+     * @param output Вывод
+     * */
+    void setLastCommandOutput(const std::string output);
 
 private:
     size_t width;
