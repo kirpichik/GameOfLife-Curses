@@ -9,8 +9,6 @@
 #include <cstdlib>
 #include <ncurses.h>
 #include <sstream>
-#include <chrono>
-#include <thread>
 #include <fstream>
 
 #include "game_handler.h"
