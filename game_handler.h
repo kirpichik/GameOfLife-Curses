@@ -50,6 +50,12 @@ public:
     GameManager(size_t width, size_t height, FieldUpdateListener& listener);
     
     /**
+     * @param field Поле для инициализации
+     * @param listener Обработчик обновления поля
+     * */
+    GameManager(const GameField& field, FieldUpdateListener& listener);
+    
+    /**
      * Выполняет следующий ход.
      * После выполнения хода вызывается обработчик события обновления.
      * */
@@ -77,6 +83,14 @@ public:
     void reset(size_t width, size_t height);
     
     /**
+     * Устанавливает новое поле и сбрасывает счетчик команд.
+     * После установки вызывается обработчик события обновления.
+     *
+     * @param field Новое поле
+     * */
+    void reset(const GameField& field);
+    
+    /**
      * Отменяет последний шаг.
      * После изменения вызывается обработчик события обновления.
      *
@@ -95,7 +109,8 @@ public:
      * @param name Команда
      * @param cmd Функция обработчик команды
      * */
-    void registerCommand(std::string name, void(*cmd)(const std::vector<std::string>&, GameManager&, std::ostream&));
+    void registerCommand(std::string name,
+                         void(*cmd)(const std::vector<std::string>&, GameManager&, std::ostream&));
     
     /**
      * Исполняет команду.
@@ -129,9 +144,8 @@ public:
      *
      * @param key Код клавиши
      *
-     * @return true, если нужно завершить работу программы.
      * */
-    bool onKeyPressed(int key);
+    void onKeyPressed(int key);
     
     /**
      * @return Игровое поле в данный момент.
@@ -142,6 +156,11 @@ public:
      * @return Количество шагов с начала игры.
      * */
     size_t getStepsCount() const;
+    
+    /**
+     * @return Последний вывод из командного режима.
+     * */
+    std::string getLastCommandOutput() const;
 
 private:
     size_t width;
@@ -153,6 +172,7 @@ private:
     GameField previousStep;
     bool hasUndo = false; // Есть ли возможность отменить на данном шаге.
     FieldUpdateListener& updateListener;
+    std::string lastCommandOutput;
     
     /**
      * Подсчитывает количество живых клеток вокруг данной клетки.

@@ -11,11 +11,13 @@
 #include <sstream>
 #include <chrono>
 #include <thread>
+#include <fstream>
 
 #include "game_handler.h"
 
+const std::string DEFAULT_SAVE_FILENAME = "game_of_life.fld";
+
 // Коды клавиш
-const int KEY_Q = 113;
 const int KEY_N = 110;
 const int KEY_B = 98;
 const int KEY_R = 114;
@@ -79,8 +81,8 @@ static void commandReset(const std::vector<std::string>& args, GameManager& game
             return;
         }
     }
-    out << "Field reseted to size (" << game.getCurrentField().getWidth() << ", " <<
-    game.getCurrentField().getHeight() << ")." << std::endl;
+    out << "Field reseted to size " << game.getCurrentField().getWidth() << "x" <<
+    game.getCurrentField().getHeight() << "" << std::endl;
 }
 
 /**
@@ -112,7 +114,7 @@ static void commandStep(const std::vector<std::string>& args, GameManager& game,
         std::this_thread::sleep_for(std::chrono::milliseconds(STEP_UPDATE_DELAY));
     }
     
-    out << "Steps done." << std::endl;
+    out << "Done " << steps << " step(s)." << std::endl;
 }
 
 /**
@@ -120,8 +122,10 @@ static void commandStep(const std::vector<std::string>& args, GameManager& game,
  * Невозможно отменить более одного шага.
  * */
 static void commandBack(const std::vector<std::string>& args, GameManager& game, std::ostream& out) {
-    game.stepBack();
-    out << "Back step completed." << std::endl;
+    if (game.stepBack())
+        out << "Back step completed." << std::endl;
+    else
+        out << "It's impossible to step back." << std::endl;
 }
 
 /**
@@ -129,8 +133,20 @@ static void commandBack(const std::vector<std::string>& args, GameManager& game,
  * Аргументы: <имя файла>
  * */
 static void commandSave(const std::vector<std::string>& args, GameManager& game, std::ostream& out) {
-    // TODO - сохранение в файл
-    out << "Not yet implemented." << std::endl;
+    std::string filename = DEFAULT_SAVE_FILENAME;
+    if (args.size() > 0)
+        filename = args[0];
+    
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        out << "Cannot create file \"" << filename << "\"." << std::endl;
+        return;
+    }
+    
+    file << game.getCurrentField() << std::endl;
+    file.close();
+    
+    out << "Game field saved to \"" << filename << "\"." << std::endl;
 }
 
 /**
@@ -138,8 +154,35 @@ static void commandSave(const std::vector<std::string>& args, GameManager& game,
  * Аргументы: <имя файла>
  * */
 static void commandLoad(const std::vector<std::string>& args, GameManager& game, std::ostream& out) {
-    // TODO - загрузка из файла
-    out << "Not yet implemented." << std::endl;
+    std::string filename = DEFAULT_SAVE_FILENAME;
+    if (args.size() > 0)
+        filename = args[0];
+    
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        out << "Cannot load file \"" << filename << "\"" << std::endl;
+        return;
+    }
+    
+    std::ostringstream fileContent;
+    std::string line;
+    while(std::getline(file, line))
+        fileContent << line << std::endl;
+    file.close();
+    
+    try {
+        GameField field(fileContent.str());
+        if (!game.canCreateFieldWithSizes(field.getWidth(), field.getHeight())) {
+            out << "Cannot place game field on this terminal size." << std::endl;
+            return;
+        }
+        game.reset(field);
+    } catch (BadGameFieldException& e) {
+        out << "Cannot parse field: " << e.what() << std::endl;
+        return;
+    }
+    
+    out << "Game \"" << filename << "\" loaded successfully." << std::endl;
 }
 
 GameManager::GameManager(size_t width, size_t height, FieldUpdateListener& listener) :
@@ -155,6 +198,11 @@ GameManager::GameManager(size_t width, size_t height, FieldUpdateListener& liste
     registerCommand("save", &commandSave);
     registerCommand("load", &commandLoad);
 }
+
+GameManager::GameManager(const GameField& field, FieldUpdateListener& listener) :
+    width(field.getWidth()), height(field.getHeight()),
+    gameField(field), updateListener(listener),
+    previousStep(GameField(0, 0)) {}
 
 size_t GameManager::countLifeAround(int posX, int posY) const {
     //   1 2 3
@@ -210,6 +258,16 @@ void GameManager::reset(size_t width, size_t height) {
     this->width = width;
     this->height = height;
     gameField = GameField(width, height);
+    hasUndo = false;
+    stepsCounter = 0;
+    update();
+}
+
+void GameManager::reset(const GameField &field) {
+    width = field.getWidth();
+    height = field.getHeight();
+    gameField = GameField(field);
+    hasUndo = false;
     stepsCounter = 0;
     update();
 }
@@ -284,8 +342,8 @@ void GameManager::executionInCommandMode() {
     
     move((int) gameField.getHeight() + 1, 0);
     clrtobot();
-    std::string outStr = out.str();
-    printw(outStr.c_str());
+    lastCommandOutput = out.str();
+    printw(lastCommandOutput.c_str());
 }
 
 void GameManager::onMousePressed(int x, int y) {
@@ -298,13 +356,11 @@ void GameManager::onMousePressed(int x, int y) {
     setCellAt(x, y);
 }
 
-bool GameManager::onKeyPressed(int key) {
+void GameManager::onKeyPressed(int key) {
     switch (key) {
         case KEY_N:
             nextStep();
             break;
-        case KEY_Q:
-            return true;
         case KEY_B:
             stepBack();
             break;
@@ -317,7 +373,6 @@ bool GameManager::onKeyPressed(int key) {
         default:
             break;
     }
-    return false;
 }
 
 const GameField GameManager::getCurrentField() const {
@@ -326,4 +381,8 @@ const GameField GameManager::getCurrentField() const {
 
 size_t GameManager::getStepsCount() const {
     return stepsCounter;
+}
+
+std::string GameManager::getLastCommandOutput() const {
+    return lastCommandOutput;
 }

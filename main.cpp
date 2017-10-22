@@ -8,6 +8,7 @@
 
 #include "view_handler.h"
 
+// Размеры стандартного поля
 const size_t FIELD_WIDTH = 10;
 const size_t FIELD_HEIGHT = 10;
 

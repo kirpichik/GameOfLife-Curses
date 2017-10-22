@@ -14,70 +14,11 @@
 
 /**
  * Вывод поля в строку.
- * TODO - передвинуть в сохранение/загрузку состояния игры.
  * */
 std::string fieldToString(const GameField& field) {
     std::ostringstream str;
     str << field;
     return str.str();
-}
-
-/**
- * Создание из поля строки.
- * # - ячейка с клеткой
- * . - ячейка без клетки
- * TODO - передвинуть в сохранение/загрузку состояния игры.
- * */
-const GameField* parseField(std::string str) {
-    std::vector<std::vector<bool>> field;
-    field.push_back(std::vector<bool>());
-    size_t line = 0;
-    size_t maxWidth = 0;
-    size_t currWidth = 0;
-    for (size_t i = 0; i < str.size(); i++) {
-        switch (str[i]) {
-            case '\n':
-                if (maxWidth != currWidth)
-                    return nullptr;
-                line++;
-                currWidth = 0;
-                field.push_back(std::vector<bool>());
-                break;
-            case '#':
-                if (line == 0)
-                    maxWidth++;
-                currWidth++;
-                field[line].push_back(true);
-                break;
-            case '.':
-                if (line == 0)
-                    maxWidth++;
-                currWidth++;
-                field[line].push_back(false);
-                break;
-            case ' ':
-            case '\r':
-                continue;
-            default:
-                return nullptr;
-        }
-    }
-    if (maxWidth != currWidth)
-        return nullptr;
-    if (maxWidth != 0)
-        line++;
-    if (currWidth == 0 && line != 0) {
-        field.pop_back();
-        line--;
-    }
-    
-    GameField* game = new GameField(line, maxWidth);
-    for (int i = 0; i < line; i++)
-        for (int j = 0; j < maxWidth; j++)
-            if (field[i][j])
-                (*game)[i][j].bornLife();
-    
-    return game;
 }
 
 /**
@@ -109,29 +50,15 @@ private:
  * Тестирование неправильных случаев создания поля из строки.
  * */
 void testWrongParseField(std::string str) {
-    const GameField* field = parseField(str);
-    ASSERT_EQ(field, nullptr);
+    ASSERT_THROW(const GameField field(str), BadGameFieldException);
 }
 
 /**
  * Тестирование правильных случаев создания поля из строки.
  * */
 void testParseField(std::string str) {
-    const GameField* field = parseField(str);
-    ASSERT_TRUE(field != NULL) << "Value: " << field;
-    ASSERT_EQ(str, fieldToString((*field)));
-    delete field;
-}
-
-/**
- * Размещает в игре клетки из поля.
- * */
-void importGameField(GameManager& game, const GameField& field) {
-    game.reset(game.getCurrentField().getWidth(), game.getCurrentField().getHeight());
-    for (int i = 0; i < field.getWidth(); i++)
-        for (int j = 0; j < field.getHeight(); j++)
-            if (field[i][j].isLife())
-                game.setCellAt(i, j);
+    const GameField field(str);
+    ASSERT_EQ(str, fieldToString(field));
 }
 
 /**
@@ -151,18 +78,16 @@ void placeFieldOnField(GameField& to, const GameField& from) {
  * */
 void testGameStep(std::string from, std::string to) {
     TestingListener catcher;
-    GameManager game(10, 10, catcher);
+    GameField fieldFrom(from);
+    GameField bigFrom(10, 10);
+    placeFieldOnField(bigFrom, fieldFrom);
+    GameManager game(bigFrom, catcher);
     
-    const GameField* field = parseField(from);
-    importGameField(game, (*field));
-    delete field;
-    
-    field = parseField(to);
+    GameField field(to);
     GameField sample(10, 10);
-    placeFieldOnField(sample, (*field));
+    placeFieldOnField(sample, field);
     
     catcher.setSampleEquality(&sample);
-    delete field;
     
     game.nextStep();
 }

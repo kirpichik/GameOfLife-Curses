@@ -11,6 +11,21 @@
 
 #include <vector>
 #include <ostream>
+#include <exception>
+
+/**
+ * Исключение при разборе поля из строки
+ * */
+class BadGameFieldException : public std::exception {
+public:
+    
+    BadGameFieldException(size_t line, size_t pos, std::string reason);
+    
+    const char* what() const throw() override;
+    
+private:
+    std::string reason;
+};
 
 /**
  * Неизменяемое игровое поле.
@@ -30,6 +45,15 @@ public:
      * Конструктор копирования
      * */
     GameField(const GameField& toCopy) : width(toCopy.width), height(toCopy.height), field(toCopy.field) {}
+    
+    /**
+     * Загрузка поля из строки.
+     * Живая клетка: '#' (решетка)
+     * Мертвая клетка: '.' (точка)
+     *
+     * @param str Строка для загрузки.
+     * */
+    GameField(const std::string str) throw(BadGameFieldException);
     
     /**
      * Получение подобъекта оператором квадратных скобок.
@@ -66,6 +90,11 @@ private:
     friend std::ostream& operator<<(std::ostream& stream, const GameField& field);
 };
 
+/**
+ * Выводит поле в поток.
+ * Живые клетки: '#' (решетка)
+ * Мертвые клетки: '.' (точка)
+ * */
 std::ostream& operator<<(std::ostream& stream, const GameField& field);
 
 /**
@@ -88,11 +117,6 @@ public:
      * */
     const Cell operator[](int pos) const;
     
-    /**
-     * Запрет присваивания.
-     * */
-    SubGameField& operator=(SubGameField const&) = delete;
-    
 private:
     const size_t posX;
     const size_t height;
@@ -100,6 +124,11 @@ private:
     
     SubGameField(size_t posX, GameField& game) :
         posX(posX), field(game.field), height(game.height) {}
+    
+    /**
+     * Запрет присваивания.
+     * */
+    SubGameField& operator=(SubGameField const&) = delete;
     
     friend GameField;
 };

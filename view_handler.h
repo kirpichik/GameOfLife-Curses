@@ -31,12 +31,12 @@ private:
      *
      * @param field Поле
      * */
-    void drawFieldAt(const GameField& field) const;
+    void drawField(const GameField& field) const;
     
     /**
-     * Рисует подсказки по горячим клавишам
+     * Рисует остальной интерфейс вокруг поля.
      * */
-    void drawPrompts() const;
+    void drawInterface() const;
     
 };
 
