@@ -11,7 +11,7 @@
 
 #include <map>
 #include <string>
-#include <ostream>
+#include <sstream>
 
 #include "game_field.h"
 
@@ -168,18 +168,31 @@ public:
      * @param output Вывод
      * */
     void setLastCommandOutput(const std::string output);
+    
+    /**
+     * Обновляет позицию клавитурного курсора на поле.
+     * */
+    void updateKeyboadCursor() const;
 
 private:
     size_t width;
     size_t height;
     
-    size_t stepsCounter = 0;
     std::map<std::string, void(*)(const std::vector<std::string>&, GameManager&, std::ostream&)> commands;
+    
     GameField gameField;
     GameField previousStep;
-    bool hasUndo = false; // Есть ли возможность отменить на данном шаге.
+    
     FieldUpdateListener& updateListener;
+    
+    size_t stepsCounter = 0;
+    bool hasUndo = false; // Есть ли возможность отменить на данном шаге.
+    
     std::string lastCommandOutput;
+    
+    // Позиция клавиатурного курсора на поле
+    size_t cursorX = 0;
+    size_t cursorY = 0;
     
     /**
      * Подсчитывает количество живых клеток вокруг данной клетки.
@@ -204,6 +217,13 @@ private:
      * @return Количество символов, которое занимает самая длинная подсказка.
      * */
     size_t getMaxPromptWidth() const;
+    
+    /**
+     * Управление курсором для установки клеток на поле при помощи стрелок на клавиатуре.
+     *
+     * @param key Код клавиши
+     * */
+    void onKeyboardCursor(int key);
 };
 
 #endif /* game_handler_h */

@@ -8,7 +8,6 @@
 
 #include <cstdlib>
 #include <ncurses.h>
-#include <sstream>
 #include <fstream>
 
 #include "game_handler.h"
@@ -21,6 +20,18 @@ const int KEY_B = 98;
 const int KEY_R = 114;
 const int KEY_C = 99;
 const int KEY_I = 105;
+
+#undef KEY_UP
+#undef KEY_DOWN
+#undef KEY_RIGHT
+#undef KEY_LEFT
+#undef KEY_ENTER
+
+const int KEY_UP = 259;
+const int KEY_DOWN = 258;
+const int KEY_LEFT = 260;
+const int KEY_RIGHT = 261;
+const int KEY_ENTER = 10;
 
 // Задержка в десятых долях секунды при обновлении следующего шага(для множественных шагов)
 const size_t STEP_UPDATE_DELAY = 1;
@@ -46,6 +57,8 @@ size_t GameManager::getMaxPromptWidth() const {
 }
 
 bool GameManager::canCreateFieldWithSizes(size_t fieldWidth, size_t fieldHeight) const {
+    if (fieldWidth == 0 || fieldHeight == 0)
+        return false;
     size_t maxWidth, maxHeight;
     getmaxyx(stdscr, maxHeight, maxWidth);
     size_t width = fieldWidth + getMaxPromptWidth();
@@ -277,6 +290,7 @@ void GameManager::reset(size_t width, size_t height) {
     gameField = GameField(width, height);
     hasUndo = false;
     stepsCounter = 0;
+    cursorY = cursorX = 0;
     update();
 }
 
@@ -286,6 +300,7 @@ void GameManager::reset(const GameField &field) {
     gameField = GameField(field);
     hasUndo = false;
     stepsCounter = 0;
+    cursorY = cursorX = 0;
     update();
 }
 
@@ -303,6 +318,7 @@ bool GameManager::stepBack() {
 
 void GameManager::update() const {
     updateListener.onUpdate(gameField);
+    updateKeyboadCursor();
 }
 
 void GameManager::registerCommand(std::string name, void (*cmd)(const std::vector<std::string>&, GameManager&, std::ostream&)) {
@@ -365,6 +381,38 @@ void GameManager::executionInCommandMode() {
     printw(lastCommandOutput.c_str());
 }
 
+void GameManager::updateKeyboadCursor() const {
+    chtype c = mvinch(cursorY, cursorX * 2) | A_REVERSE;
+    mvdelch(cursorY, cursorX * 2);
+    mvinsch(cursorY, cursorX * 2, c);
+}
+
+void GameManager::onKeyboardCursor(int key) {
+    // Удаление предыдущей метки
+    chtype c = mvinch(cursorY, cursorX * 2) & ~A_REVERSE;
+    mvdelch(cursorY, cursorX * 2);
+    mvinsch(cursorY, cursorX * 2, c);
+    switch (key) {
+        case KEY_UP:
+            if (cursorY != 0)
+                cursorY--;
+            break;
+        case KEY_DOWN:
+            if (cursorY + 1 != height)
+                cursorY++;
+            break;
+        case KEY_LEFT:
+            if (cursorX != 0)
+                cursorX--;
+            break;
+        case KEY_RIGHT:
+            if (cursorX + 1 != width)
+                cursorX++;
+            break;
+    }
+    updateKeyboadCursor();
+}
+
 void GameManager::onMousePressed(int x, int y) {
     x /= 2;
     if (x < 0 ||
@@ -372,6 +420,8 @@ void GameManager::onMousePressed(int x, int y) {
         x >= width ||
         y >= height)
         return;
+    cursorX = x;
+    cursorY = y;
     setCellAt(x, y);
 }
 
@@ -390,6 +440,15 @@ void GameManager::onKeyPressed(int key) {
             break;
         case KEY_C:
             executionInCommandMode();
+            break;
+        case KEY_ENTER:
+            setCellAt((int) cursorX, (int) cursorY);
+            break;
+        case KEY_LEFT:
+        case KEY_RIGHT:
+        case KEY_UP:
+        case KEY_DOWN:
+            onKeyboardCursor(key);
             break;
         default:
             break;
