@@ -115,7 +115,7 @@ TEST(GameHandler, ParseFieldWrongSymbols) {
 TEST(GameHandler, ParseFieldWrongSize) {
     testWrongParseField("##\n#");
     testWrongParseField("...\n..");
-    testWrongParseField(".\n");
+    testWrongParseField(".\n\n\n");
     testWrongParseField("##\n.\n##");
 }
 

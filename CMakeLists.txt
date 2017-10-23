@@ -25,5 +25,5 @@ target_link_libraries(GameOfLife ${CURSES_LIBRARIES})
 
 add_executable(GameOfLifeTests ${COMMON_SOURCES} ${TEST_SOURCES})
 
-target_link_libraries(GameOfLifeTests ${CURSES_LIBRARIES})
+target_link_libraries(GameOfLifeTests ${CURSES_LIBRARIES} pthread)
 
