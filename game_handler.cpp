@@ -7,8 +7,9 @@
 //
 
 #include <cstdlib>
-#include <ncurses.h>
 #include <fstream>
+#include <sstream>
+#include <iostream>
 
 #include "game_handler.h"
 
@@ -20,12 +21,7 @@ const int KEY_B = 98;
 const int KEY_R = 114;
 const int KEY_C = 99;
 const int KEY_I = 105;
-
-#undef KEY_UP
-#undef KEY_DOWN
-#undef KEY_RIGHT
-#undef KEY_LEFT
-#undef KEY_ENTER
+const int KEY_Q = 113;
 
 const int KEY_UP = 259;
 const int KEY_DOWN = 258;
@@ -36,9 +32,6 @@ const int KEY_ENTER = 10;
 // Задержка в десятых долях секунды при обновлении следующего шага(для множественных шагов)
 const size_t STEP_UPDATE_DELAY = 1;
 
-// Максимальная длина команды в командном режиме
-const size_t MAX_COMMAND_LEN = 50;
-
 // Количество живых клеток вокруг мертвой для зарождения жизни.
 const size_t BORN_LIFE = 3;
 
@@ -47,26 +40,6 @@ const size_t DEATH_LONELINESS = 2;
 
 // Максимальное количесвто живых клеток вокруг живой для продолжения жизни.
 const size_t DEATH_OVERPOPULATION = 3;
-
-size_t GameManager::getMaxPromptWidth() const {
-    size_t max = 0;
-    for (std::string prompt : PROMPTS)
-        if (prompt.size() > max)
-            max = prompt.size();
-    return max + 2; // К длине добавляются 2 пробела, обрамляющие символ горячей клавиши.
-}
-
-bool GameManager::canCreateFieldWithSizes(size_t fieldWidth, size_t fieldHeight) const {
-    if (fieldWidth == 0 || fieldHeight == 0)
-        return false;
-    size_t maxWidth, maxHeight;
-    getmaxyx(stdscr, maxHeight, maxWidth);
-    size_t width = fieldWidth + getMaxPromptWidth();
-    size_t promptsHeight = PROMPTS.size() + 2; // Смещение для отображения количества шагов
-    size_t height = fieldHeight > promptsHeight ? fieldHeight : promptsHeight;
-    height += 2; // Смещение для командного режима
-    return maxWidth >= width && maxHeight >= height;
-}
 
 // ==================== Обработчики команд ====================
 
@@ -77,9 +50,8 @@ bool GameManager::canCreateFieldWithSizes(size_t fieldWidth, size_t fieldHeight)
  * */
 static void commandReset(const std::vector<std::string>& args, GameManager& game, std::ostream& out) {
     if (args.size() != 2) {
-        if (game.canCreateFieldWithSizes(game.getCurrentField().getWidth(),
-                                    game.getCurrentField().getHeight()))
-            game.reset(game.getCurrentField().getWidth(), game.getCurrentField().getHeight());
+        if (game.canCreateFieldWithSizes(game.getWidth(), game.getHeight()))
+            game.reset(game.getWidth(), game.getHeight());
         else {
             out << "Cannot place game field on this terminal size." << std::endl;
             return;
@@ -95,8 +67,8 @@ static void commandReset(const std::vector<std::string>& args, GameManager& game
             return;
         }
     }
-    out << "Field reseted to size " << game.getCurrentField().getWidth() << "x" <<
-    game.getCurrentField().getHeight() << "" << std::endl;
+    out << "Field reseted to size " << game.getWidth() << "x" <<
+    game.getHeight() << "" << std::endl;
 }
 
 /**
@@ -128,21 +100,16 @@ static void commandStep(const std::vector<std::string>& args, GameManager& game,
         else
             steps = atoi(args[0].c_str());
     }
-    
-    halfdelay(STEP_UPDATE_DELAY);
-    int input;
-    game.setLastCommandOutput("Making steps... Press I for interrupt.");
+
+    game.getViewHandler().updateCommandLine("Making steps... Press I for interrupt.");
     
     size_t counter = 0;
     for (; counter < steps || isInfinity; counter++) {
         game.nextStep();
-        input = getch();
-        if (input == KEY_I)
+        InputResult result = game.getViewHandler().waitForInput(STEP_UPDATE_DELAY);
+        if (result.isKeyboard() && result.getKey() == KEY_I)
             break;
     }
-    
-    nocbreak();
-    cbreak();
     
     out << "Done " << (counter + 1) << " step(s)." << std::endl;
 }
@@ -215,10 +182,10 @@ static void commandLoad(const std::vector<std::string>& args, GameManager& game,
     out << "Game \"" << filename << "\" loaded successfully." << std::endl;
 }
 
-GameManager::GameManager(size_t width, size_t height, FieldUpdateListener& listener) :
+GameManager::GameManager(size_t width, size_t height, ViewHandler& viewHandler) :
     width(width), height(height),
     gameField(GameField(width, height)),
-    updateListener(listener),
+    viewHandler(viewHandler),
     previousStep(GameField(0, 0))
 {
     registerCommand("reset", &commandReset);
@@ -229,10 +196,90 @@ GameManager::GameManager(size_t width, size_t height, FieldUpdateListener& liste
     registerCommand("load", &commandLoad);
 }
 
-GameManager::GameManager(const GameField& field, FieldUpdateListener& listener) :
-    width(field.getWidth()), height(field.getHeight()),
-    gameField(field), updateListener(listener),
-    previousStep(GameField(0, 0)) {}
+int GameManager::runGame() {
+    if (!canCreateFieldWithSizes(width, height)) {
+        std::cerr << "Cannot create game field with " << width << "x" << height << " size." << std::endl;
+        std::cerr << "Please resize your terminal window and restart game." << std::endl;
+        return -1;
+    }
+    
+    update();
+    
+    while (true) {
+        InputResult result = viewHandler.waitForInput(0);
+        if (result.isKeyboard()) {
+            if (result.getKey() == KEY_Q)
+                break;
+            else
+                onKeyPressed(result.getKey());
+        } else
+            onMousePressed((int) result.getPosX(), (int) result.getPosY());
+    }
+    
+    return 0;
+}
+
+void GameManager::nextStep() {
+    previousStep = gameField;
+    for (int i = 0; i < width; i++) {
+        for (int j = 0; j < height; j++) {
+            size_t life = countLifeAround(i, j);
+            bool hasLife = previousStep[i][j].isLife();
+            if (hasLife && (life < DEATH_LONELINESS || life > DEATH_OVERPOPULATION))
+                gameField[i][j].kill();
+            else if (!hasLife && life == BORN_LIFE)
+                gameField[i][j].bornLife();
+        }
+    }
+    stepsCounter++;
+    hasUndo = true;
+    update();
+}
+
+bool GameManager::setCellAt(int posX, int posY) {
+    previousStep = gameField;
+    if (gameField[posX][posY].isLife())
+        gameField[posX][posY].kill();
+    else
+        gameField[posX][posY].bornLife();
+    hasUndo = true;
+    update();
+    return gameField[posX][posY].isLife();
+}
+
+void GameManager::reset(size_t width, size_t height) {
+    this->width = width;
+    this->height = height;
+    gameField = GameField(width, height);
+    hasUndo = false;
+    stepsCounter = 0;
+    cursorY = cursorX = 0;
+    viewHandler.updateKeyboardCursor(cursorX, cursorY);
+    update();
+}
+
+void GameManager::reset(const GameField &field) {
+    width = field.getWidth();
+    height = field.getHeight();
+    gameField = GameField(field);
+    hasUndo = false;
+    stepsCounter = 0;
+    cursorY = cursorX = 0;
+    viewHandler.updateKeyboardCursor(cursorX, cursorY);
+    update();
+}
+
+bool GameManager::stepBack() {
+    if (!hasUndo)
+        return false;
+    
+    gameField = previousStep;
+    hasUndo = false;
+    stepsCounter--;
+    update();
+    
+    return true;
+}
 
 size_t GameManager::countLifeAround(int posX, int posY) const {
     //   1 2 3
@@ -256,69 +303,8 @@ size_t GameManager::countLifeAround(int posX, int posY) const {
     return lifes;
 }
 
-void GameManager::nextStep() {
-    previousStep = GameField(gameField);
-    for (int i = 0; i < width; i++) {
-        for (int j = 0; j < height; j++) {
-            size_t life = countLifeAround(i, j);
-            bool hasLife = previousStep[i][j].isLife();
-            if (hasLife && (life < DEATH_LONELINESS || life > DEATH_OVERPOPULATION))
-                gameField[i][j].kill();
-            else if (!hasLife && life == BORN_LIFE)
-                gameField[i][j].bornLife();
-        }
-    }
-    stepsCounter++;
-    hasUndo = true;
-    update();
-}
-
-bool GameManager::setCellAt(int posX, int posY) {
-    previousStep = GameField(gameField);
-    if (gameField[posX][posY].isLife())
-        gameField[posX][posY].kill();
-    else
-        gameField[posX][posY].bornLife();
-    hasUndo = true;
-    update();
-    return gameField[posX][posY].isLife();
-}
-
-void GameManager::reset(size_t width, size_t height) {
-    this->width = width;
-    this->height = height;
-    gameField = GameField(width, height);
-    hasUndo = false;
-    stepsCounter = 0;
-    cursorY = cursorX = 0;
-    update();
-}
-
-void GameManager::reset(const GameField &field) {
-    width = field.getWidth();
-    height = field.getHeight();
-    gameField = GameField(field);
-    hasUndo = false;
-    stepsCounter = 0;
-    cursorY = cursorX = 0;
-    update();
-}
-
-bool GameManager::stepBack() {
-    if (!hasUndo)
-        return false;
-    
-    gameField = GameField(previousStep);
-    hasUndo = false;
-    stepsCounter--;
-    update();
-    
-    return true;
-}
-
-void GameManager::update() const {
-    updateListener.onUpdate(gameField);
-    updateKeyboadCursor();
+void GameManager::update() {
+    viewHandler.updateField(gameField, stepsCounter);
 }
 
 void GameManager::registerCommand(std::string name, void (*cmd)(const std::vector<std::string>&, GameManager&, std::ostream&)) {
@@ -350,48 +336,21 @@ static std::vector<std::string> splitString(std::string str) {
 }
 
 void GameManager::executionInCommandMode() {
-    move((int) gameField.getHeight() + 1, 0);
-    clrtobot();
-    printw(">> ");
-    keypad(stdscr, FALSE);
-    curs_set(1);
-    echo();
-    
-    char str[MAX_COMMAND_LEN];
-    getnstr(str, MAX_COMMAND_LEN);
-    
-    keypad(stdscr, TRUE);
-    curs_set(0);
-    noecho();
-    
-    std::vector<std::string> split = splitString(std::string(str));
+    std::vector<std::string> split = splitString(viewHandler.readCommandInput());
     
     std::string command = split[0];
     std::vector<std::string> args(split.begin() + 1, split.begin() + split.size());
     std::ostringstream out;
     
-    lastCommandOutput = "";
+    viewHandler.updateCommandLine("");
     
     if (!executeCommand(command, args, out))
         out << "Command \"" << command << "\" not found.";
     
-    move((int) gameField.getHeight() + 1, 0);
-    clrtobot();
-    lastCommandOutput = out.str();
-    printw(lastCommandOutput.c_str());
-}
-
-void GameManager::updateKeyboadCursor() const {
-    chtype c = mvinch(cursorY, cursorX * 2) | A_REVERSE;
-    mvdelch(cursorY, cursorX * 2);
-    mvinsch(cursorY, cursorX * 2, c);
+    viewHandler.updateCommandLine(out.str());
 }
 
 void GameManager::onKeyboardCursor(int key) {
-    // Удаление предыдущей метки
-    chtype c = mvinch(cursorY, cursorX * 2) & ~A_REVERSE;
-    mvdelch(cursorY, cursorX * 2);
-    mvinsch(cursorY, cursorX * 2, c);
     switch (key) {
         case KEY_UP:
             if (cursorY != 0)
@@ -410,18 +369,13 @@ void GameManager::onKeyboardCursor(int key) {
                 cursorX++;
             break;
     }
-    updateKeyboadCursor();
+    viewHandler.updateKeyboardCursor(cursorX, cursorY);
 }
 
 void GameManager::onMousePressed(int x, int y) {
-    x /= 2;
-    if (x < 0 ||
-        y < 0 ||
-        x >= width ||
-        y >= height)
-        return;
     cursorX = x;
     cursorY = y;
+    viewHandler.updateKeyboardCursor(cursorX, cursorY);
     setCellAt(x, y);
 }
 
@@ -431,11 +385,11 @@ void GameManager::onKeyPressed(int key) {
             nextStep();
             break;
         case KEY_B:
-            lastCommandOutput = stepBack() ? "Back step completed."
-                : "It's impossible to step back.";
+            viewHandler.updateCommandLine(stepBack() ? "Back step completed."
+                : "It's impossible to step back.");
             break;
         case KEY_R:
-            lastCommandOutput = "Field reseted.";
+            viewHandler.updateCommandLine("Field reseted.");
             reset(width, height);
             break;
         case KEY_C:
@@ -455,18 +409,22 @@ void GameManager::onKeyPressed(int key) {
     }
 }
 
+bool GameManager::canCreateFieldWithSizes(size_t width, size_t height) const {
+    return viewHandler.canCrateFieldWithSizes(width, height);
+}
+
 const GameField GameManager::getCurrentField() const {
     return gameField;
 }
 
-size_t GameManager::getStepsCount() const {
-    return stepsCounter;
+size_t GameManager::getWidth() const {
+    return width;
 }
 
-std::string GameManager::getLastCommandOutput() const {
-    return lastCommandOutput;
+size_t GameManager::getHeight() const {
+    return height;
 }
 
-void GameManager::setLastCommandOutput(const std::string output) {
-    lastCommandOutput = output;
+ViewHandler& GameManager::getViewHandler() {
+    return viewHandler;
 }

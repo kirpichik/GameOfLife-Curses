@@ -11,28 +11,135 @@
 
 #include <map>
 #include <string>
-#include <sstream>
+#include <ostream>
+#include <cstdint>
 
 #include "game_field.h"
 
-const std::vector<std::string> PROMPTS = {
-    "Q Exit",
-    "N Next turn",
-    "B Step Back",
-    "R Reset",
-    "C Command mode"
+/**
+ * Результат ожидания ввода.
+ * */
+class InputResult {
+public:
+    
+    /**
+     * Событие брошено по таймауту.
+     * */
+    InputResult() : timedout(true) {}
+    
+    /**
+     * Событие брошено по нажатию мыши.
+     *
+     * @param posX Позиция нажатия по X
+     * @param posY Позиция нажатия по Y
+     * */
+    InputResult(size_t posX, size_t posY) : timedout(false), keyboard(false), posX(posX), posY(posY) {}
+    
+    /**
+     * Событие брошено по нажатию клавиши.
+     *
+     * @param key Код клавиши.
+     * */
+    InputResult(int key) : timedout(false), keyboard(true), key(key) {}
+    
+    int getKey() const {
+        return isKeyboard() ? key : 0;
+    }
+    
+    size_t getPosX() const {
+        return isKeyboard() ? 0 : posX;
+    }
+    
+    size_t getPosY() const {
+        return isKeyboard() ? 0 : posY;
+    }
+    
+    bool isTimedOut() const {
+        return timedout;
+    }
+    
+    bool isKeyboard() const {
+        return keyboard && !timedout;
+    }
+    
+    const InputResult& operator=(const InputResult& copy) {
+        posX = copy.posX;
+        posY = copy.posY;
+        keyboard = copy.keyboard;
+        timedout = copy.timedout;
+        key = copy.key;
+        return (*this);
+    }
+    
+private:
+    // Позиция клика мышью
+    size_t posX, posY;
+    
+    // Пришло ли событие с клавиатуры или с мыши
+    bool keyboard;
+    
+    // Если это событие брошено по окончании времени ожидания
+    bool timedout;
+    
+    // Код события
+    int key;
 };
 
 /**
  * Обработчик события обновления поля.
  * */
-class FieldUpdateListener {
+class ViewHandler {
 public:
     
     /**
-     * Вызывается при обновлении поля и принимает новый объект поля.
+     * Отрисовывает поле и подсказки.
+     *
+     * @param field Игровое поле
      * */
-    virtual void onUpdate(const GameField& field) = 0;
+    virtual void updateField(const GameField& field, size_t stepsCount) = 0;
+    
+    /**
+     * Отрисовывает курсор клавиатуры.
+     *
+     * @param posX Позиция курсора по X
+     * @param posY Позиция курсора по Y
+     * */
+    virtual void updateKeyboardCursor(size_t posX, size_t posY) = 0;
+    
+    /**
+     * Отрисовывает командную строку и вывод в ней
+     *
+     * @param commandOutput Новая строка вывода командного режима
+     * */
+    virtual void updateCommandLine(std::string commandOutput) = 0;
+    
+    /**
+     * Считывает строку в командном режиме.
+     *
+     * @return Результат ввода пользователя
+     * */
+    virtual std::string readCommandInput() = 0;
+    
+    /**
+     * Ожидает нажатие клавиши/клик мышкой/истечение времени таймаута.
+     * Если время ожидания истекает, возвращает специальное состояние объекта InputResult
+     *
+     * @param timeout Время ожидания ввода в десятых долях секунды(0..255)
+     *
+     * @return Результат ожидания
+     * */
+    virtual const InputResult waitForInput(uint8_t timeout) = 0;
+    
+    /**
+     * Проверяет, можно ли создать поле с данными размерами на данном окне.
+     *
+     * @param width Ширина нового поля
+     * @param height Высота нового поля
+     *
+     * @return true, если поле можно создать.
+     * */
+    virtual bool canCrateFieldWithSizes(size_t width, size_t height) = 0;
+    
 };
 
 /**
@@ -45,15 +152,14 @@ public:
     /**
      * @param width Ширина поля
      * @param height Высота поля
-     * @param listener Обработчик обновления поля.
+     * @param viewHandler Обработчик обновления поля.
      * */
-    GameManager(size_t width, size_t height, FieldUpdateListener& listener);
+    GameManager(size_t width, size_t height, ViewHandler& viewHandler);
     
     /**
-     * @param field Поле для инициализации
-     * @param listener Обработчик обновления поля
+     * Запускает игру.
      * */
-    GameManager(const GameField& field, FieldUpdateListener& listener);
+    int runGame();
     
     /**
      * Выполняет следующий ход.
@@ -99,27 +205,12 @@ public:
     bool stepBack();
     
     /**
-     * Принудительно вызывает обработчик события обновления без внесения изменений
-     * в состояние поля.
-     * */
-    void update() const;
-    
-    /**
      * Регистрирует функцию обработчика команды.
      * @param name Команда
      * @param cmd Функция обработчик команды
      * */
     void registerCommand(std::string name,
                          void(*cmd)(const std::vector<std::string>&, GameManager&, std::ostream&));
-    
-    /**
-     * Исполняет команду.
-     * @param name Команда
-     * @param args Аргументы
-     *
-     * @return true, если команда найдена и исполнена.
-     * */
-    bool executeCommand(std::string name, std::vector<std::string>& args, std::ostream& output);
     
     /**
      * Проверяет, можно ли создать поле с данными размерами на данном терминале.
@@ -132,47 +223,24 @@ public:
     bool canCreateFieldWithSizes(size_t fieldWidth, size_t fieldHeight) const;
     
     /**
-     * Обработка нажатий мышью
-     *
-     * @param x Координата X
-     * @param y Координата Y
-     * */
-    void onMousePressed(int x, int y);
-    
-    /**
-     * Обработка нажатий клавиатуры
-     *
-     * @param key Код клавиши
-     *
-     * */
-    void onKeyPressed(int key);
-    
-    /**
      * @return Игровое поле в данный момент.
      * */
     const GameField getCurrentField() const;
     
     /**
-     * @return Количество шагов с начала игры.
+     * @return Текущая ширина игрового поля.
      * */
-    size_t getStepsCount() const;
+    size_t getWidth() const;
     
     /**
-     * @return Последний вывод из командного режима.
+     * @return Текущая высота игрового поля.
      * */
-    std::string getLastCommandOutput() const;
+    size_t getHeight() const;
     
     /**
-     * Устанавливает последний вывод командного режима(для мнгновенного обновления).
-     *
-     * @param output Вывод
+     * @return Обработчик взаимодействия с пользователем
      * */
-    void setLastCommandOutput(const std::string output);
-    
-    /**
-     * Обновляет позицию клавитурного курсора на поле.
-     * */
-    void updateKeyboadCursor() const;
+    ViewHandler& getViewHandler();
 
 private:
     size_t width;
@@ -183,12 +251,10 @@ private:
     GameField gameField;
     GameField previousStep;
     
-    FieldUpdateListener& updateListener;
+    ViewHandler& viewHandler;
     
     size_t stepsCounter = 0;
     bool hasUndo = false; // Есть ли возможность отменить на данном шаге.
-    
-    std::string lastCommandOutput;
     
     // Позиция клавиатурного курсора на поле
     size_t cursorX = 0;
@@ -205,18 +271,41 @@ private:
     size_t countLifeAround(int posX, int posY) const;
     
     /**
+     * Принудительно вызывает обработчик события обновления без внесения изменений
+     * в состояние поля.
+     * */
+    void update();
+    
+    /**
      * Активирует командный режим и ждет ввода одной команды.
      * После исполнения команды переходит в обычный режим.
      * */
     void executionInCommandMode();
     
     /**
-     * Вычисляет максимальную ширину подсказки на экране
-     * в количестве занимаемых ею символов.
+     * Исполняет команду.
+     * @param name Команда
+     * @param args Аргументы
      *
-     * @return Количество символов, которое занимает самая длинная подсказка.
+     * @return true, если команда найдена и исполнена.
      * */
-    size_t getMaxPromptWidth() const;
+    bool executeCommand(std::string name, std::vector<std::string>& args, std::ostream& output);
+    
+    /**
+     * Обработка нажатий мышью
+     *
+     * @param x Координата X
+     * @param y Координата Y
+     * */
+    void onMousePressed(int x, int y);
+    
+    /**
+     * Обработка нажатий клавиатуры
+     *
+     * @param key Код клавиши
+     *
+     * */
+    void onKeyPressed(int key);
     
     /**
      * Управление курсором для установки клеток на поле при помощи стрелок на клавиатуре.
