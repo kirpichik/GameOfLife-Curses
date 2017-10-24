@@ -95,8 +95,17 @@ void CursesViewHandler::updateKeyboardCursor(size_t posX, size_t posY) {
  *
  * @return Строка с примененными заменами
  * */
-static std::string replace(std::string str, std::string what, std::string repl) {
-    return str; // TODO
+static std::string replace(const std::string str, const std::string what, const std::string repl) {
+    std::string result(str);
+    size_t index = 0;
+    while (true) {
+        index = str.find(what, index);
+        if (index == std::string::npos)
+            break;
+        result.replace(index, what.size(), repl);
+        index += repl.size();
+    }
+    return result;
 }
 
 void CursesViewHandler::updateCommandLine(std::string commandOutput) {
