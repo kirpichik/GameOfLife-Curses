@@ -24,12 +24,28 @@ std::string fieldToString(const GameField& field) {
 /**
  * Тестовый слушатель обновления поля.
  * */
-class TestingListener : public FieldUpdateListener {
+class TestingListener : public ViewHandler {
 public:
     
-    void onUpdate(const GameField& field) override {
+    void updateField(const GameField& field, size_t stepsCount) override {
         if (sample)
             ASSERT_EQ((*sample), field);
+    }
+    
+    void updateKeyboardCursor(size_t posX, size_t posY) override {}
+    
+    void updateCommandLine(std::string commandOutput) override {}
+
+    std::string readCommandInput() override {
+        return "";
+    }
+    
+    const InputResult waitForInput(uint8_t timeout) override {
+        return InputResult();
+    }
+    
+    bool canCrateFieldWithSizes(size_t width, size_t height) override {
+        return true;
     }
     
     void setSampleEquality(const GameField* sample) {

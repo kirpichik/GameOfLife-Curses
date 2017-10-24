@@ -157,6 +157,15 @@ public:
     GameManager(size_t width, size_t height, ViewHandler& viewHandler);
     
     /**
+     * @param field Игровое поле
+     * @param viewHandler Обработчик обновления поля.
+     * */
+    GameManager(const GameField& field, ViewHandler& viewHandler) :
+        width(field.getWidth()), height(field.getHeight()),
+        gameField(field), previousStep(GameField(0, 0)),
+        viewHandler(viewHandler) {}
+    
+    /**
      * Запускает игру.
      * */
     int runGame();
