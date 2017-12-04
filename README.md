@@ -89,11 +89,11 @@ https://ru.wikipedia.org/wiki/Жизнь_(игра)
 
 Получаем исходные файлы:
 
-`git clone https://github.com/kirpichik/GameOfLife.git`
+`git clone https://github.com/kirpichik/GameOfLife-Curses.git`
 
 Переходим в репозиторий:
 
-`cd GameOfLife`
+`cd GameOfLife-Curses`
 
 Генерируем Makefile:
 
