@@ -51,15 +51,15 @@ void CursesViewHandler::updateField(const GameField& field, size_t stepsCount) {
       attroff(A_REVERSE);
       printw(prompt.substr(1).c_str());
     }
-
-    // Display steps count
-    move(i + 1, coloumn);
-    clrtoeol();
-    printw("Step: %zd", stepsCount);
-
-    // Display commandline
-    drawCommandLine();
   }
+  
+  // Display steps count
+  move((int)PROMPTS.size() + 1, (int)gameWidth * 2);
+  clrtoeol();
+  printw("Step: %zd", stepsCount);
+  
+  // Display commandline
+  drawCommandLine();
 
   // Draws field
   for (int i = 0; i < field.getWidth(); i++)

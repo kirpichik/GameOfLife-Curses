@@ -2,6 +2,8 @@
 
 Realization of the "Game Of Life" using the ncurses library.
 
+[Game Demo](https://raw.githubusercontent.com/kirpichik/GameOfLife-Curses/master/image.png "Game Demo" )
+
 ## About Game Of Life
 
 [Wikipedia](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life)

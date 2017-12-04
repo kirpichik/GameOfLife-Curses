@@ -118,7 +118,7 @@ static void commandStep(const std::vector<std::string>& args,
       break;
   }
 
-  out << "Done " << (counter + 1) << " step(s)." << std::endl;
+  out << "Done " << counter << " step(s)." << std::endl;
 }
 
 /**
@@ -350,8 +350,13 @@ static std::vector<std::string> splitString(std::string str) {
 
 void GameManager::executionInCommandMode() {
   std::vector<std::string> split = splitString(viewHandler.readCommandInput());
+  
+  if (split.empty()) {
+    viewHandler.updateCommandLine("");
+    return;
+  }
 
-  std::string command = split[0];
+  std::string& command = split[0];
   std::vector<std::string> args(split.begin() + 1,
                                 split.begin() + split.size());
   std::ostringstream out;
