@@ -1,69 +1,71 @@
 #  Game Of Life NCurses
 
-Реализация игры "жизнь" с использованием библиотеки ncurses.
+Realization of the "Game Of Life" using the ncurses library.
 
-## Об игре жизнь
+## About Game Of Life
 
-https://ru.wikipedia.org/wiki/Жизнь_(игра)
+[Wikipedia](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life)
 
-## Управление
+## Control
 
-### Мышь
+### Mouse
 
-Можно нажимать мышью на поле, тем самым расставляя клетки.
+You can click the mouse on the field, thereby placing the cells.
 
-### Клавиатура
+### Keyboard
 
-**Q** - выйти из игры
+**Q** - quit game
 
-**N** - следующий ход
+**N** - next step
 
-**B** - Отменить последний ход(отменить можно только один ход)
+**B** - Cancel last step (you can cancel only one step).
 
-**R** - Очистить клетки на поле и сбросить счетчик команд
+**R** - Clear field and reset steps counter
 
-**C** - Запустить командный режим
+**C** - Enable command mode
 
-### Команды командного режима:
+### Avaliable commands in command mode:
 
-`<обязательно>` - Обязательные аргументы.
+`<required>` - Required argument.
 
-`[опционально]` - Опциональные аргументы.
+`[optional]` - Optional arargument.
 
-- **reset [ширина] [высота]**
+- **reset [width] [height]**
 
-Очищает поле и сбрасывает счетчик команд.
-Если передать в аргументы ширину и высоту, создаст поле с данными шириной и высотой.
+Clears the field and resets the steps counter.
+If you pass width and height arguments, it creates a field with given width and height.
 
-- **set <позиция X> <позиция Y>**
+- **set <position X> <position Y>**
 
-Устанавливает или удаляет организм в клетке.
+Sets or removes life in a cell.
 
-- **step [количество шагов или '-']**
+- **step [steps count or '-']**
 
-Выполняет переданное кол-во шагов. Если аргумент отсутствует, выполняет 1 шаг.
-Если агрумент '-', выполняет бесконечное количество шагов, пока не будет нажата клавиша 'I'.
+Performs the specified number of steps. If there is no argument, it performs 1 step.
+If the argument is '-', performs an infinite number of steps, until the key 'I' is pressed.
 
 - **back**
 
-Отменяет последний шаг.
-Невозможно отменить более одного шага.
+Cancels the last step.
+You can not undo more than one step.
 
-- **save [имя файла]**
+- **save [filename]**
 
-Сохраняет состояние поля в файл.
+Saves field to file.
+If no filename is specified, will be used: "game_of_life.fld"
 
-- **load [имя файла]**
+- **load [filename]**
 
-Загружает состояние поля из файла.
+Loads field from file.
+If no filename is specified, will be used: "game_of_life.fld"
 
-## Установка libncurses
+## Install libncurses
 
 ### Linux
 
-В большинстве дистрибутивов библиотека уже будет предустановлена.
+**In most distrs, the library will already be preinstalled.**
 
-Используйте пакетный менеджер вашего дистрибутива. Пример для Debian:
+Use the package manager of your distr. Example for Debian:
 
 `sudo apt-get update`
 
@@ -71,39 +73,43 @@ https://ru.wikipedia.org/wiki/Жизнь_(игра)
 
 ### Mac OS X
 
-Используйте пакетный менеджер [Homebrew](https://brew.sh):
+Use the [Homebrew](https://brew.sh) package manager:
 
 `brew install ncurses`
 
 ### Windows
 
-**Без поддержки нажатия мышью**
+**Without mouse support.**
 
 - [PDCurses](https://pdcurses.sourceforge.io)
 
-- ~~Установить в Windows 10 накрутки от Ubuntu?~~
+- ~~Install to Windows 10 tools from Ubuntu?~~
 
-## Сборка игры
+## Build
 
-**Для сборки требуется CMake!**
+**CMake is required for build!**
 
-Получаем исходные файлы:
+Getting the source files:
 
 `git clone https://github.com/kirpichik/GameOfLife-Curses.git`
 
-Переходим в репозиторий:
+Go to the dirrectory:
 
 `cd GameOfLife-Curses`
 
-Генерируем Makefile:
+Building cmake:
 
 `mkdir cmake-build && cd cmake-build && cmake ..`
 
-Выполняем сборку:
+Building game executable:
 
-`make GameOfLife`
+`make`
 
-Запускаем игру:
+Running tests:
+
+`./GameOfLifeTests`
+
+Launch the Game!
 
 `./GameOfLife`
 

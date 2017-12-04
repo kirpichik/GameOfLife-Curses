@@ -6,15 +6,15 @@
 //  Copyright © 2017 Кирилл. All rights reserved.
 //
 
-#include "view_handler.h"
 #include "game_handler.h"
+#include "view_handler.h"
 
-// Размеры стандартного поля
+// Size of standart field
 const size_t FIELD_WIDTH = 10;
 const size_t FIELD_HEIGHT = 10;
 
-int main(int argc, const char * argv[]) {
-    CursesViewHandler view;
-    GameManager control(FIELD_WIDTH, FIELD_HEIGHT, view);
-    return control.runGame();
+int main(int argc, const char* argv[]) {
+  CursesViewHandler view;
+  GameManager control(FIELD_WIDTH, FIELD_HEIGHT, view);
+  return control.runGame();
 }

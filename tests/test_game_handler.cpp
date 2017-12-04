@@ -12,18 +12,12 @@
 
 #include "game_handler.h"
 
-/**
- * Вывод поля в строку.
- * */
 std::string fieldToString(const GameField& field) {
     std::ostringstream str;
     str << field;
     return str.str();
 }
 
-/**
- * Тестовый слушатель обновления поля.
- * */
 class TestingListener : public ViewHandler {
 public:
     
@@ -62,24 +56,15 @@ private:
     const GameField* sample = nullptr;
 };
 
-/**
- * Тестирование неправильных случаев создания поля из строки.
- * */
 void testWrongParseField(std::string str) {
     ASSERT_THROW(const GameField field(str), BadGameFieldException);
 }
 
-/**
- * Тестирование правильных случаев создания поля из строки.
- * */
 void testParseField(std::string str) {
     const GameField field(str);
     ASSERT_EQ(str, fieldToString(field));
 }
 
-/**
- * Размещает меньшее поле в левом верхнем углу большего поля.
- * */
 void placeFieldOnField(GameField& to, const GameField& from) {
     for (int i = 0; i < from.getWidth(); i++)
         for (int j = 0; j < from.getHeight(); j++)
@@ -89,9 +74,6 @@ void placeFieldOnField(GameField& to, const GameField& from) {
                 to[i][j].kill();
 }
 
-/**
- * Тестирование шагов.
- * */
 void testGameStep(std::string from, std::string to) {
     TestingListener catcher;
     GameField fieldFrom(from);

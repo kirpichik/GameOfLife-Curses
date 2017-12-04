@@ -6,173 +6,117 @@
 //  Copyright © 2017 Кирилл. All rights reserved.
 //
 
-#ifndef game_field_h
-#define game_field_h
+#ifndef GAME_FIELD_H
+#define GAME_FIELD_H
 
-#include <vector>
-#include <ostream>
 #include <exception>
+#include <ostream>
+#include <vector>
 
-/**
- * Исключение при разборе поля из строки
- * */
 class BadGameFieldException : public std::exception {
-public:
-    
-    BadGameFieldException(size_t line, size_t pos, std::string reason);
-    
-    const char* what() const throw() override;
-    
-private:
-    std::string reason;
+ public:
+  BadGameFieldException(size_t line, size_t pos, std::string reason);
+
+  const char* what() const throw() override;
+
+ private:
+  std::string reason;
 };
 
-/**
- * Неизменяемое игровое поле.
- * */
 class GameField {
-public:
-    
-    class SubGameField;
-    
-    /**
-     * @param width Ширина поля
-     * @param height Высота поля
-     * */
-    GameField(size_t width, size_t height);
-    
-    /**
-     * Конструктор копирования
-     * */
-    GameField(const GameField& toCopy) : width(toCopy.width), height(toCopy.height), field(toCopy.field) {}
-    
-    /**
-     * Загрузка поля из строки.
-     * Живая клетка: '#' (решетка)
-     * Мертвая клетка: '.' (точка)
-     *
-     * @param str Строка для загрузки.
-     * */
-    GameField(const std::string str) throw(BadGameFieldException);
-    
-    /**
-     * Получение подобъекта оператором квадратных скобок.
-     * Учитывается цикличность поля по модулю width.
-     * */
-    SubGameField operator[](int pos);
-    
-    /**
-     * Получение подобъекта оператором квадратных скобок.
-     * Учитывается цикличность поля по модулю width.
-     * */
-    const SubGameField operator[](int pos) const;
-    
-    /**
-     * @return Ширина поля.
-     * */
-    size_t getWidth() const;
-    
-    /**
-     * @return Высота поля.
-     * */
-    size_t getHeight() const;
-    
-    const GameField& operator=(const GameField& copy);
-    
-    bool operator==(const GameField& equal) const;
-    
-private:
-    size_t width;
-    size_t height;
-    std::vector<std::vector<bool>> field;
-    
-    friend SubGameField;
-    friend std::ostream& operator<<(std::ostream& stream, const GameField& field);
+ public:
+  class SubGameField;
+
+  GameField(size_t width, size_t height);
+
+  GameField(const GameField& toCopy)
+      : width(toCopy.width), height(toCopy.height), field(toCopy.field) {}
+
+  /**
+   * Parse string and creates field from it.
+   * Living Cell: '#'
+   * Dead Cell: '.'
+   *
+   * @param str String for parse.
+   */
+  GameField(const std::string str) throw(BadGameFieldException);
+
+  SubGameField operator[](int pos);
+
+  const SubGameField operator[](int pos) const;
+
+  size_t getWidth() const;
+
+  size_t getHeight() const;
+
+  const GameField& operator=(const GameField& copy);
+
+  bool operator==(const GameField& equal) const;
+
+ private:
+  size_t width;
+  size_t height;
+  std::vector<std::vector<bool>> field;
+
+  friend SubGameField;
+  friend std::ostream& operator<<(std::ostream& stream, const GameField& field);
 };
 
 /**
- * Выводит поле в поток.
- * Живые клетки: '#' (решетка)
- * Мертвые клетки: '.' (точка)
- * */
+ * Outputs field to stream.
+ * Living Cell: '#'
+ * Dead Cell: '.'
+ */
 std::ostream& operator<<(std::ostream& stream, const GameField& field);
 
-/**
- * Получение значения ячейки оператором двойных квадратных скобок.
- * */
 class GameField::SubGameField {
-public:
-    
-    class Cell;
-    
-    /**
-     * Получение значения ячейки на данной позиции.
-     * Учитывается цикличность поля по модулю height.
-     * */
-    Cell operator[](int pos);
-    
-    /**
-     * Получение значения ячейки на данной позиции.
-     * Учитывается цикличность поля по модулю height.
-     * */
-    const Cell operator[](int pos) const;
-    
-private:
-    const size_t posX;
-    const size_t height;
-    std::vector<std::vector<bool>>& field;
-    
-    SubGameField(size_t posX, GameField& game) :
-        posX(posX), field(game.field), height(game.height) {}
-    
-    /**
-     * Запрет присваивания.
-     * */
-    SubGameField& operator=(SubGameField const&) = delete;
-    
-    friend GameField;
+ public:
+  class Cell;
+
+  /**
+   * @return Cell at position, considering loop.
+   */
+  Cell operator[](int pos);
+
+  /**
+   * @return Cell at position, considering loop.
+   */
+  const Cell operator[](int pos) const;
+
+ private:
+  const size_t posX;
+  const size_t height;
+  std::vector<std::vector<bool>>& field;
+
+  SubGameField(size_t posX, GameField& game)
+      : posX(posX), field(game.field), height(game.height) {}
+
+  SubGameField& operator=(SubGameField const&) = delete;
+
+  friend GameField;
 };
 
-/**
- * Клетка на поле.
- * */
 class GameField::SubGameField::Cell {
-public:
-    
-    /**
-     * @return true, если клетка жива.
-     * */
-    bool isLife() const;
-    
-    /**
-     * @return Позиция X
-     * */
-    size_t getX() const;
-    
-    /**
-     * @return Позиция Y
-     * */
-    size_t getY() const;
-    
-    /**
-     * Зарождает жизнь.
-     * */
-    void bornLife();
-    
-    /**
-     * Уничтожает жизнь.
-     * */
-    void kill();
+ public:
+  bool isLife() const;
 
-private:
-    const size_t posX;
-    const size_t posY;
-    std::vector<std::vector<bool>>& field;
-    
-    Cell(size_t posX, size_t posY, std::vector<std::vector<bool>>& field) :
-        posX(posX), posY(posY), field(field) {}
-    
-    friend SubGameField;
+  size_t getX() const;
+
+  size_t getY() const;
+
+  void bornLife();
+
+  void kill();
+
+ private:
+  const size_t posX;
+  const size_t posY;
+  std::vector<std::vector<bool>>& field;
+
+  Cell(size_t posX, size_t posY, std::vector<std::vector<bool>>& field)
+      : posX(posX), posY(posY), field(field) {}
+
+  friend SubGameField;
 };
 
-#endif /* game_field_h */
+#endif /* GAME_FIELD_H */
