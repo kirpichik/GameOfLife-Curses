@@ -2,7 +2,7 @@
 
 Realization of the "Game Of Life" using the ncurses library.
 
-[Game Demo](https://raw.githubusercontent.com/kirpichik/GameOfLife-Curses/master/image.png "Game Demo" )
+![Game Demo](https://raw.githubusercontent.com/kirpichik/GameOfLife-Curses/master/image.png "Game Demo" )
 
 ## About Game Of Life
 
