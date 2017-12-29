@@ -290,7 +290,8 @@ bool GameManager::stepBack() {
 
   gameField = previousStep;
   hasUndo = false;
-  stepsCounter--;
+  if (stepsCounter)
+    stepsCounter--;
   update();
 
   return true;
@@ -339,7 +340,7 @@ bool GameManager::executeCommand(std::string name,
   return true;
 }
 
-static std::vector<std::string> splitString(std::string str) {
+static std::vector<std::string> splitString(std::string& str) {
   std::istringstream input(str);
   std::string item;
   std::vector<std::string> items;
