@@ -44,12 +44,14 @@ class InputResult {
 
   bool isKeyboard() const { return keyboard && !timedout; }
 
-  const InputResult& operator=(const InputResult& copy) {
-    posX = copy.posX;
-    posY = copy.posY;
-    keyboard = copy.keyboard;
-    timedout = copy.timedout;
-    key = copy.key;
+  InputResult& operator=(const InputResult& copy) {
+    if (&copy != this) {
+      posX = copy.posX;
+      posY = copy.posY;
+      keyboard = copy.keyboard;
+      timedout = copy.timedout;
+      key = copy.key;
+    }
     return (*this);
   }
 
@@ -82,7 +84,7 @@ class ViewHandler {
   /**
    * Draws output from commands.
    */
-  virtual void updateCommandLine(std::string commandOutput) = 0;
+  virtual void updateCommandLine(const std::string& commandOutput) = 0;
 
   /**
    * Reads command input from user.
@@ -152,7 +154,7 @@ class GameManager {
    * @param name Command name.
    * @param cmd Command handler.
    */
-  void registerCommand(std::string name,
+  void registerCommand(const std::string& name,
                        void (*cmd)(const std::vector<std::string>&,
                                    GameManager&,
                                    std::ostream&));
@@ -218,8 +220,8 @@ class GameManager {
    *
    * @return true, if command successfully executed.
    */
-  bool executeCommand(std::string name,
-                      std::vector<std::string>& args,
+  bool executeCommand(const std::string& name,
+                      const std::vector<std::string>& args,
                       std::ostream& output);
 
   /**

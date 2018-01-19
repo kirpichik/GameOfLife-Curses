@@ -15,9 +15,9 @@
 
 class BadGameFieldException : public std::exception {
  public:
-  BadGameFieldException(size_t line, size_t pos, std::string reason);
+  BadGameFieldException(size_t line, size_t pos, const std::string& reason);
 
-  const char* what() const throw() override;
+  const char* what() const noexcept override;
 
  private:
   std::string reason;
@@ -39,7 +39,7 @@ class GameField {
    *
    * @param str String for parse.
    */
-  GameField(const std::string str) throw(BadGameFieldException);
+  GameField(const std::string str);
 
   SubGameField operator[](int pos);
 
@@ -49,7 +49,7 @@ class GameField {
 
   size_t getHeight() const;
 
-  const GameField& operator=(const GameField& copy);
+  GameField& operator=(const GameField& copy);
 
   bool operator==(const GameField& equal) const;
 

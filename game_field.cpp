@@ -10,6 +10,9 @@
 
 #include "game_field.h"
 
+const char ALIVE_CELL = '#';
+const char NO_CELL = '.';
+
 /**
  * Makes the position looped in.
  * The neighbors of the upper cells are lower,
@@ -22,19 +25,19 @@
  */
 static int loopCoordinate(int pos, size_t module) {
   if (pos < 0)
-    return ((int)module) - (-pos) % module;
+    return (static_cast<int>(module)) - (-pos) % module;
   return pos % module;
 }
 
 BadGameFieldException::BadGameFieldException(size_t line,
                                              size_t pos,
-                                             std::string reason) {
+                                             const std::string& reason) {
   std::ostringstream out;
   out << reason << " at line " << line << ", position " << pos;
   this->reason = out.str();
 }
 
-const char* BadGameFieldException::what() const throw() {
+const char* BadGameFieldException::what() const noexcept {
   return reason.c_str();
 }
 
@@ -45,7 +48,7 @@ GameField::GameField(size_t width, size_t height)
     field[i] = std::vector<bool>(height);
 }
 
-GameField::GameField(const std::string str) throw(BadGameFieldException) {
+GameField::GameField(const std::string str) {
   field.push_back(std::vector<bool>());
   size_t line = 0;
   size_t maxWidth = 0;
@@ -60,13 +63,13 @@ GameField::GameField(const std::string str) throw(BadGameFieldException) {
         currWidth = 0;
         field.push_back(std::vector<bool>());
         break;
-      case '#':
+      case ALIVE_CELL:
         if (line == 0)
           maxWidth++;
         currWidth++;
         field[line].push_back(true);
         break;
-      case '.':
+      case NO_CELL:
         if (line == 0)
           maxWidth++;
         currWidth++;
@@ -111,10 +114,12 @@ size_t GameField::getHeight() const {
   return height;
 }
 
-const GameField& GameField::operator=(const GameField& copy) {
-  width = copy.width;
-  height = copy.height;
-  field = copy.field;
+GameField& GameField::operator=(const GameField& copy) {
+  if (&copy != this) {
+    width = copy.width;
+    height = copy.height;
+    field = copy.field;
+  }
   return (*this);
 }
 
@@ -125,7 +130,7 @@ bool GameField::operator==(const GameField& equal) const {
 std::ostream& operator<<(std::ostream& stream, const GameField& field) {
   for (int i = 0; i < field.width; i++) {
     for (int j = 0; j < field.height; j++)
-      stream << (field.field[i][j] ? '#' : '.');
+      stream << (field.field[i][j] ? ALIVE_CELL : NO_CELL);
     if (i != field.width - 1)
       stream << std::endl;
   }

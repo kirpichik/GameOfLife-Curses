@@ -28,7 +28,7 @@ public:
     
     void updateKeyboardCursor(size_t posX, size_t posY) override {}
     
-    void updateCommandLine(std::string commandOutput) override {}
+    void updateCommandLine(const std::string& commandOutput) override {}
 
     std::string readCommandInput() override {
         return "";

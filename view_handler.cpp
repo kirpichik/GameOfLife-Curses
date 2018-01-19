@@ -52,12 +52,12 @@ void CursesViewHandler::updateField(const GameField& field, size_t stepsCount) {
       printw(prompt.substr(1).c_str());
     }
   }
-  
+
   // Display steps count
   move((int)PROMPTS.size() + 1, (int)gameWidth * 2);
   clrtoeol();
   printw("Step: %zd", stepsCount);
-  
+
   // Display commandline
   drawCommandLine();
 
@@ -103,7 +103,7 @@ static std::string replace(const std::string& str,
   return result;
 }
 
-void CursesViewHandler::updateCommandLine(std::string commandOutput) {
+void CursesViewHandler::updateCommandLine(const std::string& commandOutput) {
   commandLine = replace(commandOutput, "%", "%%");
   drawCommandLine();
 }

@@ -59,8 +59,8 @@ static void commandReset(const std::vector<std::string>& args,
       return;
     }
   } else {
-    int width = atoi(args[0].c_str());
-    int height = atoi(args[1].c_str());
+    int width = stoi(args[0]);
+    int height = stoi(args[1]);
     if (game.canCreateFieldWithSizes(width, height))
       game.reset(width, height);
     else {
@@ -104,7 +104,7 @@ static void commandStep(const std::vector<std::string>& args,
     if (args[0] == "-")
       isInfinity = true;
     else
-      steps = atoi(args[0].c_str());
+      steps = stoi(args[0]);
   }
 
   game.getViewHandler().updateCommandLine(
@@ -141,7 +141,7 @@ static void commandBack(const std::vector<std::string>& args,
 static void commandSave(const std::vector<std::string>& args,
                         GameManager& game,
                         std::ostream& out) {
-  std::string filename = DEFAULT_SAVE_FILENAME;
+  std::string filename(DEFAULT_SAVE_FILENAME);
   if (args.size() > 0)
     filename = args[0];
 
@@ -187,7 +187,7 @@ static void commandLoad(const std::vector<std::string>& args,
       return;
     }
     game.reset(field);
-  } catch (BadGameFieldException& e) {
+  } catch (const BadGameFieldException& e) {
     out << "Cannot parse field: " << e.what() << std::endl;
     return;
   }
@@ -323,15 +323,15 @@ void GameManager::update() {
   viewHandler.updateField(gameField, stepsCounter);
 }
 
-void GameManager::registerCommand(std::string name,
+void GameManager::registerCommand(const std::string& name,
                                   void (*cmd)(const std::vector<std::string>&,
                                               GameManager&,
                                               std::ostream&)) {
   commands[name] = cmd;
 }
 
-bool GameManager::executeCommand(std::string name,
-                                 std::vector<std::string>& args,
+bool GameManager::executeCommand(const std::string& name,
+                                 const std::vector<std::string>& args,
                                  std::ostream& output) {
   auto executor = commands.find(name);
   if (executor == commands.end())
@@ -340,7 +340,7 @@ bool GameManager::executeCommand(std::string name,
   return true;
 }
 
-static std::vector<std::string> splitString(std::string& str) {
+static std::vector<std::string> splitString(const std::string& str) {
   std::istringstream input(str);
   std::string item;
   std::vector<std::string> items;
@@ -350,8 +350,9 @@ static std::vector<std::string> splitString(std::string& str) {
 }
 
 void GameManager::executionInCommandMode() {
-  std::vector<std::string> split = splitString(viewHandler.readCommandInput());
-  
+  const std::string commandInput(viewHandler.readCommandInput());
+  std::vector<std::string> split(splitString(commandInput));
+
   if (split.empty()) {
     viewHandler.updateCommandLine("");
     return;
