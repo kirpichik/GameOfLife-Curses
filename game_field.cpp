@@ -48,7 +48,7 @@ GameField::GameField(size_t width, size_t height)
     field[i] = std::vector<bool>(height);
 }
 
-GameField::GameField(const std::string str) {
+GameField::GameField(const std::string& str) {
   field.push_back(std::vector<bool>());
   size_t line = 0;
   size_t maxWidth = 0;
@@ -75,7 +75,6 @@ GameField::GameField(const std::string str) {
         currWidth++;
         field[line].push_back(false);
         break;
-      case ' ':
       case '\r':
         continue;
       default:

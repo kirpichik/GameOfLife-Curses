@@ -39,7 +39,7 @@ class GameField {
    *
    * @param str String for parse.
    */
-  GameField(const std::string str);
+  GameField(const std::string& str);
 
   SubGameField operator[](int pos);
 

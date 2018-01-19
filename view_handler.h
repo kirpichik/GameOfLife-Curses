@@ -9,6 +9,8 @@
 #ifndef VIEW_HANDLER_H
 #define VIEW_HANDLER_H
 
+#include <ncurses.h>
+
 #include "game_handler.h"
 
 const std::vector<std::string> PROMPTS = {
@@ -33,6 +35,8 @@ class CursesViewHandler : public ViewHandler {
   ~CursesViewHandler();
 
  private:
+  WINDOW* fieldWin;
+
   // Commandline output
   std::string commandLine;
 

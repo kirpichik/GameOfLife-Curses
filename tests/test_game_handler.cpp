@@ -56,11 +56,11 @@ private:
     const GameField* sample = nullptr;
 };
 
-void testWrongParseField(std::string str) {
+void testWrongParseField(const std::string& str) {
     ASSERT_THROW(const GameField field(str), BadGameFieldException);
 }
 
-void testParseField(std::string str) {
+void testParseField(const std::string& str) {
     const GameField field(str);
     ASSERT_EQ(str, fieldToString(field));
 }
@@ -74,7 +74,7 @@ void placeFieldOnField(GameField& to, const GameField& from) {
                 to[i][j].kill();
 }
 
-void testGameStep(std::string from, std::string to) {
+void testGameStep(const std::string& from, const std::string& to) {
     TestingListener catcher;
     GameField fieldFrom(from);
     GameField bigFrom(10, 10);

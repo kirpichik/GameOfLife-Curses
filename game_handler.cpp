@@ -228,7 +228,8 @@ int GameManager::runGame() {
       else
         onKeyPressed(result.getKey());
     } else
-      onMousePressed((int)result.getPosX(), (int)result.getPosY());
+      onMousePressed(static_cast<int>(result.getPosX()),
+                     static_cast<int>(result.getPosY()));
   }
 
   return 0;
@@ -418,7 +419,7 @@ void GameManager::onKeyPressed(int key) {
       executionInCommandMode();
       break;
     case KEY_ENTER:
-      setCellAt((int)cursorX, (int)cursorY);
+      setCellAt(static_cast<int>(cursorX), static_cast<int>(cursorY));
       break;
     case KEY_LEFT:
     case KEY_RIGHT:
