@@ -219,6 +219,7 @@ int GameManager::runGame() {
   }
 
   update();
+  viewHandler.updateKeyboardCursor(cursorX, cursorY);
 
   while (true) {
     InputResult result = viewHandler.waitForInput(0);
@@ -420,6 +421,7 @@ void GameManager::onKeyPressed(int key) {
       break;
     case KEY_ENTER:
       setCellAt(static_cast<int>(cursorX), static_cast<int>(cursorY));
+      viewHandler.updateKeyboardCursor(cursorX, cursorY);
       break;
     case KEY_LEFT:
     case KEY_RIGHT:

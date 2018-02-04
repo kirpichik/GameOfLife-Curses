@@ -30,33 +30,33 @@ You can click the mouse on the field, thereby placing the cells.
 
 `<required>` - Required argument.
 
-`[optional]` - Optional arargument.
+`[optional]` - Optional argument.
 
-- **reset [width] [height]**
+- `reset [width] [height]`
 
 Clears the field and resets the steps counter.
 If you pass width and height arguments, it creates a field with given width and height.
 
-- **set <position X> <position Y>**
+- `set < position X > < position Y >`
 
 Sets or removes life in a cell.
 
-- **step [steps count or '-']**
+- `step [steps count or '-']`
 
 Performs the specified number of steps. If there is no argument, it performs 1 step.
 If the argument is '-', performs an infinite number of steps, until the key 'I' is pressed.
 
-- **back**
+- `back`
 
 Cancels the last step.
 You can not undo more than one step.
 
-- **save [filename]**
+- `save [filename]`
 
 Saves field to file.
 If no filename is specified, will be used: "game_of_life.fld"
 
-- **load [filename]**
+- `load [filename]`
 
 Loads field from file.
 If no filename is specified, will be used: "game_of_life.fld"

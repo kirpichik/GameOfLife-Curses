@@ -78,9 +78,6 @@ void CursesViewHandler::updateField(const GameField& field, size_t stepsCount) {
       winsch(fieldWin, field[i][j].isLife() ? ALIVE_CELL : NO_CELL);
     }
   wrefresh(fieldWin);
-
-  // Draws keyboard cursor
-  updateKeyboardCursor(cursorX, cursorY);
 }
 
 void CursesViewHandler::updateKeyboardCursor(size_t posX, size_t posY) {
