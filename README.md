@@ -1,6 +1,6 @@
 #  Game Of Life NCurses
 
-Realization of the "Game Of Life" using the ncurses library.
+Implementation of the "Game Of Life" using the ncurses library.
 
 ![Game Demo](https://raw.githubusercontent.com/kirpichik/GameOfLife-Curses/master/image.png "Game Demo" )
 
