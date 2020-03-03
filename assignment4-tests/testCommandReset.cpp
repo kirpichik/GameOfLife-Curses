@@ -5,44 +5,6 @@
 
 #include "game_handler.h"
 
-class TestingListener : public ViewHandler {
-public:
-    
-    void updateField(const GameField& field, size_t stepsCount) override {
-        if (sample)
-            ASSERT_EQ((*sample), field);
-    }
-    
-    void updateKeyboardCursor(size_t posX, size_t posY) override {}
-    
-    void updateCommandLine(const std::string& commandOutput) override {}
-
-    std::string readCommandInput() override {
-        return "";
-    }
-    
-    const InputResult waitForInput(uint8_t timeout) override {
-        return InputResult();
-    }
-    
-    bool canCrateFieldWithSizes(size_t width, size_t height) override {
-        return true;
-    }
-    
-    void setSampleEquality(const GameField* sample) {
-        ASSERT_TRUE(sample != nullptr);
-        if (this->sample)
-            delete this->sample;
-        this->sample = sample;
-    }
-    
-    void cancelCathing() {
-        sample = nullptr;
-    }
-private:
-    const GameField* sample = nullptr;
-};
-
 TEST(GameHandler, ValidInput) {
   TestingListener catcher;
   GameManager game(10, 10, catcher);
