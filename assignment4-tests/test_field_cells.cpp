@@ -21,7 +21,4 @@ TEST(GameField, cellPlacement){
             ASSERT_FALSE(field[i][j].isLife());
         }
     }
-
-
-
 }
