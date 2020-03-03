@@ -160,6 +160,13 @@ class GameManager {
                                    std::ostream&));
 
   /**
+   * Counts the number of living cells around this cell.
+   *
+   * @return Number of living cells around
+   */
+  size_t countLifeAround(int posX, int posY) const;
+
+  /**
    * Checks whether it is possible to create a field with the given dimensions
    * on this terminal.
    */
@@ -193,13 +200,6 @@ class GameManager {
   // Keyboard cursor on field position
   size_t cursorX = 0;
   size_t cursorY = 0;
-
-  /**
-   * Counts the number of living cells around this cell.
-   *
-   * @return Number of living cells around
-   */
-  size_t countLifeAround(int posX, int posY) const;
 
   /**
    * Forces the update view handler without making any changes to the state of
