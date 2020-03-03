@@ -3,52 +3,51 @@
 #include <vector>
 #include "gtest/gtest.h"
 
-#include "game_handler.h"
 #include "mockViewHandler.cpp"
 
-TEST(GameManager::setCellAt, FiveFiveT) {
+TEST(GameManager, FiveFiveT) {
   MockViewHandler mockViewHandler;
   GameManager game(10, 10, mockViewHandler);
   int posX = 5;
   int posY = 5;
   
-  ASSERT_EQ(GameManager::setCellAt(posX, posY), False);
+  ASSERT_FALSE(game.setCellAt(posX, posY));
 }
 
-TEST(GameManager::setCellAt, FiveFiveF) {
+TEST(GameManager, FiveFiveF) {
   MockViewHandler mockViewHandler;
   GameManager game(10, 10, mockViewHandler);
   int posX = 5;
   int posY = 5;
   
-  ASSERT_EQ(GameManager::setCellAt(posX, posY), True);
+  ASSERT_TRUE(game.setCellAt(posX, posY));
 }
 
-TEST(GameManager::setCellAt, ZeroZeroT) {
+TEST(GameManager, ZeroZeroT) {
   MockViewHandler mockViewHandler;
   GameManager game(10, 10, mockViewHandler);
   int posX = 0;
   int posY = 0;
   
-  ASSERT_EQ(GameManager::setCellAt(posX, posY), False);
+  ASSERT_FALSE(game.setCellAt(posX, posY));
 }
 
 
-TEST(GameManager::setCellAt, ZeroZeroF) {
+TEST(GameManager, ZeroZeroF) {
   MockViewHandler mockViewHandler;
   GameManager game(10, 10, mockViewHandler);
   int posX = 0;
   int posY = 0;
   
-  ASSERT_EQ(GameManager::setCellAt(posX, posY), True);
+  ASSERT_TRUE(game.setCellAt(posX, posY));
 }
 
 
-TEST(GameManager::setCellAt, TenTenT) {
+TEST(GameManager, TenTenT) {
   MockViewHandler mockViewHandler;
   GameManager game(10, 10, mockViewHandler);
   int posX = 10;
   int posY = 10;
   
-  ASSERT_EQ(GameManager::setCellAt(posX, posY), False);
+  ASSERT_FALSE(game.setCellAt(posX, posY));
 }
