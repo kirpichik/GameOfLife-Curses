@@ -288,7 +288,13 @@ void GameManager::reset(const GameField& field) {
 
 void GameManager::step() {
   size_t counter = 0;
-  for (; true; ++counter
+  for (; true; ++counter) {
+    nextStep();
+    InputResult result = getViewHandler().waitForInput(STEP_UPDATE_DELAY);
+    if (result.isKeyboard() && result.getKey() == KEY_I)
+      break;
+  }
+}
 
 bool GameManager::stepBack() {
   if (!hasUndo)
