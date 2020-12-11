@@ -141,6 +141,8 @@ class GameManager {
    */
   void reset(const GameField& field);
 
+  void step();
+
   /**
    * Cancels last step.
    * You can cancel only one step.

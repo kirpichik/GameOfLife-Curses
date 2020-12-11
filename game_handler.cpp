@@ -286,6 +286,10 @@ void GameManager::reset(const GameField& field) {
   update();
 }
 
+void GameManager::step() {
+  size_t counter = 0;
+  for (; true; ++counter
+
 bool GameManager::stepBack() {
   if (!hasUndo)
     return false;
@@ -406,6 +410,9 @@ void GameManager::onKeyPressed(int key) {
   switch (key) {
     case KEY_N:
       nextStep();
+      break;
+    case KEY_I:
+      step();
       break;
     case KEY_B:
       viewHandler.updateCommandLine(stepBack()
