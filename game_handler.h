@@ -141,7 +141,7 @@ class GameManager {
    */
   void reset(const GameField& field);
 
-  void step();
+  void infiniteSteps();
 
   /**
    * Cancels last step.

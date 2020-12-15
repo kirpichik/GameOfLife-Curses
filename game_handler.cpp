@@ -286,14 +286,18 @@ void GameManager::reset(const GameField& field) {
   update();
 }
 
-void GameManager::step() {
+void GameManager::infiniteSteps() {
+  getViewHandler().updateCommandLine(
+    "Making steps... Press I for interrupt.");
   size_t counter = 0;
-  for (; true; ++counter) {
+  while ( true ) {
+    ++counter;
     nextStep();
     InputResult result = getViewHandler().waitForInput(STEP_UPDATE_DELAY);
     if (result.isKeyboard() && result.getKey() == KEY_I)
       break;
   }
+  std::cout << "Made " << counter << " step(s)." << std::endl;
 }
 
 bool GameManager::stepBack() {
@@ -418,7 +422,7 @@ void GameManager::onKeyPressed(int key) {
       nextStep();
       break;
     case KEY_I:
-      step();
+      infiniteSteps();
       break;
     case KEY_B:
       viewHandler.updateCommandLine(stepBack()
